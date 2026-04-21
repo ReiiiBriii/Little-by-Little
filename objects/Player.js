@@ -4,7 +4,8 @@ export default class Player {
         this.scene = scene;
         this.debugGraphics = scene.add.graphics();
         this.sprite = scene.physics.add.sprite(x, y, 'player');
-        // this.sprite.play('idle');
+        this.sprite.setScale(0.5);
+        this.sprite.play('idle');
         this.sprite.setCollideWorldBounds(true);
 
         this.keys = scene.input.keyboard.addKeys('W,A,S,D,SPACE,SHIFT');
@@ -16,15 +17,15 @@ export default class Player {
 
     update() {
 
-        this.debugGraphics.clear();
-        this.debugGraphics.lineStyle(2, 0xff0000); // red outline
+        // this.debugGraphics.clear();
+        // this.debugGraphics.lineStyle(2, 0xff0000); // red outline
 
-        this.debugGraphics.strokeRect(
-            this.sprite.body.x,
-            this.sprite.body.y,
-            this.sprite.body.width,
-            this.sprite.body.height
-        );
+        // this.debugGraphics.strokeRect(
+        //     this.sprite.body.x,
+        //     this.sprite.body.y,
+        //     this.sprite.body.width,
+        //     this.sprite.body.height
+        // );
 
 
 

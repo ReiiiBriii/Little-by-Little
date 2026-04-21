@@ -17,6 +17,7 @@ export default class Level1 extends Phaser.Scene {
 create() {
     this.platforms = this.physics.add.staticGroup();
     this.platforms.create(400, 580, 'ground').setScale(2).refreshBody();
+    
 
     this.anims.create({
         key: 'idle',
