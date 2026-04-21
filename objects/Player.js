@@ -2,8 +2,9 @@ import * as Phaser from 'phaser';
 export default class Player {
     constructor(scene, x, y) {
         this.scene = scene;
-
+        this.debugGraphics = scene.add.graphics();
         this.sprite = scene.physics.add.sprite(x, y, 'player');
+        // this.sprite.play('idle');
         this.sprite.setCollideWorldBounds(true);
 
         this.keys = scene.input.keyboard.addKeys('W,A,S,D,SPACE,SHIFT');
@@ -14,6 +15,19 @@ export default class Player {
     }
 
     update() {
+
+        this.debugGraphics.clear();
+        this.debugGraphics.lineStyle(2, 0xff0000); // red outline
+
+        this.debugGraphics.strokeRect(
+            this.sprite.body.x,
+            this.sprite.body.y,
+            this.sprite.body.width,
+            this.sprite.body.height
+        );
+
+
+
         const onGround = this.sprite.body.blocked.down;
 
         if (onGround) {
