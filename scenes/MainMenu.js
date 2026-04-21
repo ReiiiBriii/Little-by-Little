@@ -1,5 +1,7 @@
 import * as Phaser from 'phaser';
+
 export default class MainMenu extends Phaser.Scene {
+
     constructor() {
         super('mainMenu');
     }
@@ -11,7 +13,11 @@ export default class MainMenu extends Phaser.Scene {
 
     create() {
         this.add.image(400, 300, 'bg');
-        this.sound.play('menuMusic', { loop: true });
+
+        if (!this.sound.get('menuMusic')) {
+            this.sound.play('menuMusic', { loop: true });
+        }
+
         this.add.text(400, 200, 'MY GAME', {
             fontSize: '48px',
             color: '#ffffff'
@@ -22,8 +28,37 @@ export default class MainMenu extends Phaser.Scene {
             color: '#ffffff'
         }).setOrigin(0.5);
 
-        this.input.keyboard.once('keydown-SPACE', () => {
+        const optionsText = this.add.text(400, 400, 'OPTIONS', {
+            fontSize: '24px',
+            color: '#ffffff'
+        }).setOrigin(0.5);
+
+        playText.setInteractive({ useHandCursor: true });
+        optionsText.setInteractive({ useHandCursor: true });
+
+        const addHover = (obj) => {
+            obj.on('pointerover', () => {
+                obj.setStyle({ color: '#ffff00' });
+                obj.setScale(1.1);
+            });
+
+            obj.on('pointerout', () => {
+                obj.setStyle({ color: '#ffffff' });
+                obj.setScale(1);
+            });
+        };
+
+        addHover(playText);
+        addHover(optionsText);
+
+        // click events
+        playText.on('pointerdown', () => {
             this.scene.start('level1');
         });
+
+        optionsText.on('pointerdown', () => {
+            this.scene.start('optionsMenu');
+        });
+
     }
 }
