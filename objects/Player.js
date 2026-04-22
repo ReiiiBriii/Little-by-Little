@@ -38,6 +38,17 @@ export default class Player {
         this.dashedDown = false;
         this.isJumping = false;
         this.wasPadDashDown = false;
+
+        // --- Konami Code ---
+        this.unlimitedDashes = false;
+        const konami = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
+        const combo = scene.input.keyboard.createCombo(konami, { resetOnMatch: true });
+        scene.input.keyboard.on('keycombomatch', (event) => {
+            if (event === combo) {
+                this.unlimitedDashes = !this.unlimitedDashes;
+                console.log('Konami Code toggled! Unlimited dashes: ' + this.unlimitedDashes);
+            }
+        });
     }
 
     update(time, delta) {
@@ -81,6 +92,18 @@ export default class Player {
             if (this.dashedDown) {
                 this.dashedDown = false;
                 this.sprite.setVelocityY(dashBounceForce);
+
+                // Squish on impact
+                this.scene.tweens.killTweensOf(this.sprite);
+                this.sprite.setScale(0.5);
+                this.scene.tweens.add({
+                    targets: this.sprite,
+                    scaleX: 0.6,
+                    scaleY: 0.4,
+                    duration: 80,
+                    yoyo: true,
+                    ease: 'Quad.easeOut'
+                });
             }
         }
 
@@ -114,7 +137,7 @@ export default class Player {
         }
 
         // --- Dash ---
-        if (dashJustDown && this.canDash && !this.hasDashed) {
+        if (dashJustDown && !this.isDashing && (this.unlimitedDashes || (this.canDash && !this.hasDashed))) {
             this.isDashing = true;
             this.canDash = false;
             this.hasDashed = true;
@@ -137,6 +160,18 @@ export default class Player {
             dy /= len;
 
             this.sprite.setVelocity(dx * dashSpeed, dy * dashSpeed);
+
+            // if (this.dashedDown) {
+            //     this.scene.tweens.killTweensOf(this.sprite);
+            //     this.scene.tweens.add({
+            //         targets: this.sprite,
+            //         scaleX: 0.3,
+            //         scaleY: 0.7,
+            //         duration: dashDuration / 2,
+            //         yoyo: true,
+            //         ease: 'Quad.easeOut'
+            //     });
+            // }
 
             this.scene.time.delayedCall(dashDuration, () => {
                 this.isDashing = false;
