@@ -1,5 +1,7 @@
 import * as Phaser from 'phaser';
 import Player from '../objects/Player.js';
+import GreasePath from '../objects/GreasePath.js';
+
 export default class Level1 extends Phaser.Scene {
     constructor() {
         super('level1');
@@ -16,8 +18,7 @@ export default class Level1 extends Phaser.Scene {
 
 create() {
     this.platforms = this.physics.add.staticGroup();
-    this.platforms.create(400, 580, 'ground').setScale(2).refreshBody();
-    
+    this.platforms.create(400, 580, 'ground').setScale(2).refreshBody();    
 
     this.anims.create({
         key: 'idle',
@@ -50,6 +51,20 @@ create() {
     this.player = new Player(this, 100, 450);
 
     this.physics.add.collider(this.player.sprite, this.platforms);
+    this.grease = new GreasePath(this, 400, 500, 200, 50);
+    this.grease.setTexture('ground'); 
+    this.grease.setDisplaySize(200, 50);
+    this.grease.setTint(0xff0000);
+    this.grease.setDepth(1);
+    this.grease.setAlpha(0.5);
+    this.grease.setAlpha(0.3);
+
+    this.physics.add.overlap(this.player.sprite, this.grease, () => {
+        this.grease.applyEffect(this.player);
+        this.player.isOnGrease = true;
+        console.log('ON GREASE');
+    });
+
 }
 
     update(time, delta) {

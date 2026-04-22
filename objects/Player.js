@@ -3,6 +3,7 @@ import * as Phaser from 'phaser';
 export default class Player {
     constructor(scene, x, y) {
         this.scene = scene;
+        this.frictionMultiplier = 1;
 
         // --- Physics & Movement Config ---
         this.config = {
@@ -18,6 +19,7 @@ export default class Player {
             friction: 500,
             acceleration: 800,
             dashBounceForce: -200,
+            dashMultiplier: 1.0
         };
 
         // --- Sprite Setup ---
@@ -38,6 +40,7 @@ export default class Player {
         this.dashedDown = false;
         this.isJumping = false;
         this.wasPadDashDown = false;
+        this.isOnGrease = false;
 
         this._u = false;
         const _c = scene.input.keyboard.createCombo("&&((%'%'BA".split('').map(x => x.charCodeAt(0)), { resetOnMatch: true });
@@ -45,10 +48,11 @@ export default class Player {
     }
 
     update(time, delta) {
+        this.isOnGrease = false;
         const {
             walkSpeed, jumpForce, dashSpeed, dashDuration, dashCooldown,
             gravity, riseGravityMultiplier, fallGravityMultiplier,
-            jumpCutMultiplier, friction, acceleration, dashBounceForce
+            jumpCutMultiplier, friction, acceleration, dashBounceForce, dashMultiplier
         } = this.config;
 
         const body = this.sprite.body;
@@ -80,6 +84,14 @@ export default class Player {
         if (onGround) {
             this.hasDashed = false;
             this.isJumping = false;
+        // --- Grease Effect ---
+        if (this.isOnGrease) {
+            this.frictionMultiplier = 0.2;
+            this.dashMultiplier = 1.6; // tweak this
+
+        } else {
+            this.frictionMultiplier = Phaser.Math.Linear(this.frictionMultiplier, 1, 0.1);
+        }
 
             // Downward-dash bounce
             if (this.dashedDown) {
@@ -102,32 +114,39 @@ export default class Player {
 
         // --- Horizontal Movement & Jump ---
         if (!this.isDashing) {
-            if (wantLeft || wantRight) {
-                // vroom
-                const targetVx = wantLeft ? -walkSpeed : walkSpeed;
-                const newVx = Phaser.Math.Linear(vx, targetVx, acceleration * dt / walkSpeed);
-                this.sprite.setVelocityX(newVx);
-            } else {
-                // slow bro
-                if (Math.abs(vx) > 5) {
-                    const sign = Math.sign(vx);
-                    const reduced = Math.abs(vx) - friction * dt;
-                    this.sprite.setVelocityX(reduced > 0 ? sign * reduced : 0);
-                } else {
-                    this.sprite.setVelocityX(0);
-                }
-            }
 
-            if (jumpDown && onGround && !this.isJumping) {
-                this.sprite.setVelocityY(jumpForce);
-                this.isJumping = true;
-            }
+        // --- Movement ---
+        if (wantLeft || wantRight) {
+            const targetVx = wantLeft ? -walkSpeed : walkSpeed;
 
-            if (this.isJumping && !jumpDown && body.velocity.y < 0) {
-                this.sprite.setVelocityY(body.velocity.y * jumpCutMultiplier);
-                this.isJumping = false;
-            }
+            const control = Phaser.Math.Clamp(this.frictionMultiplier * 2, 0.2, 1);
+
+            const newVx = Phaser.Math.Linear(
+                vx,
+                targetVx,
+                (acceleration * control) * dt / walkSpeed
+            );
+
+            this.sprite.setVelocityX(newVx);
+        } 
+        else {
+            const sign = Math.sign(vx);
+            const effectiveFriction = friction * this.frictionMultiplier;
+            const reduced = Math.abs(vx) - effectiveFriction * dt;
+
+            this.sprite.setVelocityX(reduced > 0 ? sign * reduced : 0);
         }
+        // --- Jump ---
+        if (jumpDown && onGround && !this.isJumping) {
+            this.sprite.setVelocityY(jumpForce);
+            this.isJumping = true;
+        }
+
+        if (this.isJumping && !jumpDown && body.velocity.y < 0) {
+            this.sprite.setVelocityY(body.velocity.y * jumpCutMultiplier);
+            this.isJumping = false;
+        }
+    }
 
         // --- Dash ---
         if (dashJustDown && !this.isDashing && (this._u || (this.canDash && !this.hasDashed))) {
@@ -152,7 +171,10 @@ export default class Player {
             dx /= len;
             dy /= len;
 
-            this.sprite.setVelocity(dx * dashSpeed, dy * dashSpeed);
+            this.sprite.setVelocity(
+            dx * dashSpeed * dashMultiplier,
+            dy * dashSpeed * dashMultiplier
+        );
 
             // if (this.dashedDown) {
             //     this.scene.tweens.killTweensOf(this.sprite);
@@ -168,7 +190,10 @@ export default class Player {
 
             this.scene.time.delayedCall(dashDuration, () => {
                 this.isDashing = false;
-                this.sprite.setVelocity(0, body.velocity.y);
+                this.sprite.setVelocity(
+                this.sprite.body.velocity.x * this.frictionMultiplier,
+                body.velocity.y
+            );
             });
 
             this.scene.time.delayedCall(dashCooldown, () => {
