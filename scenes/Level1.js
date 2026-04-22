@@ -52,7 +52,7 @@ create() {
     this.physics.add.collider(this.player.sprite, this.platforms);
 }
 
-    update() {
-        this.player.update();
+    update(time, delta) {
+        this.player.update(time, delta);
     }
 }
