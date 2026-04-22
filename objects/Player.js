@@ -86,7 +86,7 @@ export default class Player {
                 this.dashedDown = false;
                 this.sprite.setVelocityY(dashBounceForce);
 
-                // Squish on impact
+                // boink
                 this.scene.tweens.killTweensOf(this.sprite);
                 this.sprite.setScale(0.5);
                 this.scene.tweens.add({
@@ -103,12 +103,12 @@ export default class Player {
         // --- Horizontal Movement & Jump ---
         if (!this.isDashing) {
             if (wantLeft || wantRight) {
-                // Accelerate toward target speed
+                // vroom
                 const targetVx = wantLeft ? -walkSpeed : walkSpeed;
                 const newVx = Phaser.Math.Linear(vx, targetVx, acceleration * dt / walkSpeed);
                 this.sprite.setVelocityX(newVx);
             } else {
-                // Apply friction to decelerate
+                // slow bro
                 if (Math.abs(vx) > 5) {
                     const sign = Math.sign(vx);
                     const reduced = Math.abs(vx) - friction * dt;
