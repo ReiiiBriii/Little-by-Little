@@ -7,12 +7,14 @@ export default class Player {
         // --- Physics & Movement Config ---
         this.config = {
             walkSpeed: 230,
-            jumpForce: -330,
+            jumpForce: -480,
+            riseGravityMultiplier: 2.0,
+            fallGravityMultiplier: 4.5,
+            jumpCutMultiplier: 0.4,
             dashSpeed: 500,
-            dashDuration: 150,   // ms
-            dashCooldown: 1000,  // ms
+            dashDuration: 150,
+            dashCooldown: 1000,
             gravity: 300,
-            fallGravityMultiplier: 2.5,
             friction: 500,
             acceleration: 800,
             dashBounceForce: -200,
@@ -34,21 +36,46 @@ export default class Player {
         this.isMoving = false;
         this.facingDir = 1;
         this.dashedDown = false;
+        this.isJumping = false;
+        this.wasPadDashDown = false;
     }
 
     update(time, delta) {
         const {
             walkSpeed, jumpForce, dashSpeed, dashDuration, dashCooldown,
-            friction, acceleration, dashBounceForce
+            gravity, riseGravityMultiplier, fallGravityMultiplier,
+            jumpCutMultiplier, friction, acceleration, dashBounceForce
         } = this.config;
-        const dt = delta / 1000;              // seconds this frame
-        const onGround = this.sprite.body.blocked.down;
-        const vx = this.sprite.body.velocity.x;
+
+        const body = this.sprite.body;
+        const dt = delta / 1000;
+        const onGround = body.blocked.down;
+        const vx = body.velocity.x;
         const moving = Math.abs(vx) > 5;
+
+        // --- Input Gathering (Keyboard + Gamepad) ---
+        const pad = this.scene.input.gamepad && this.scene.input.gamepad.total > 0 ? this.scene.input.gamepad.getPad(0) : null;
+        const lsX = pad && pad.leftStick ? pad.leftStick.x : 0;
+        const lsY = pad && pad.leftStick ? pad.leftStick.y : 0;
+        
+        const wantLeft = this.keys.A.isDown || (pad && (pad.left || lsX < -0.4));
+        const wantRight = this.keys.D.isDown || (pad && (pad.right || lsX > 0.4));
+        const wantUp = this.keys.W.isDown || (pad && (pad.up || lsY < -0.4));
+        const wantDown = this.keys.S.isDown || (pad && (pad.down || lsY > 0.4));
+
+        const jumpDown = this.keys.SPACE.isDown || (pad && (pad.A || pad.B));
+        
+        let dashJustDown = Phaser.Input.Keyboard.JustDown(this.keys.SHIFT);
+        const padDashDown = pad && (pad.X || pad.Y || pad.R1 || pad.R2);
+        if (padDashDown && !this.wasPadDashDown) {
+            dashJustDown = true;
+        }
+        this.wasPadDashDown = padDashDown;
 
         // Reset air-dash when landing
         if (onGround) {
             this.hasDashed = false;
+            this.isJumping = false;
 
             // Downward-dash bounce
             if (this.dashedDown) {
@@ -59,9 +86,6 @@ export default class Player {
 
         // --- Horizontal Movement & Jump ---
         if (!this.isDashing) {
-            const wantLeft = this.keys.A.isDown;
-            const wantRight = this.keys.D.isDown;
-
             if (wantLeft || wantRight) {
                 // Accelerate toward target speed
                 const targetVx = wantLeft ? -walkSpeed : walkSpeed;
@@ -78,13 +102,19 @@ export default class Player {
                 }
             }
 
-            if (this.keys.SPACE.isDown && onGround) {
+            if (jumpDown && onGround && !this.isJumping) {
                 this.sprite.setVelocityY(jumpForce);
+                this.isJumping = true;
+            }
+
+            if (this.isJumping && !jumpDown && body.velocity.y < 0) {
+                this.sprite.setVelocityY(body.velocity.y * jumpCutMultiplier);
+                this.isJumping = false;
             }
         }
 
         // --- Dash ---
-        if (Phaser.Input.Keyboard.JustDown(this.keys.SHIFT) && this.canDash && !this.hasDashed) {
+        if (dashJustDown && this.canDash && !this.hasDashed) {
             this.isDashing = true;
             this.canDash = false;
             this.hasDashed = true;
@@ -92,20 +122,16 @@ export default class Player {
             let dx = 0;
             let dy = 0;
 
-            if (this.keys.A.isDown) dx -= 1;
-            if (this.keys.D.isDown) dx += 1;
-            if (this.keys.W.isDown) dy -= 1;
-            if (this.keys.S.isDown) dy += 1;
+            if (wantLeft) dx -= 1;
+            if (wantRight) dx += 1;
+            if (wantUp) dy -= 1;
+            if (wantDown) dy += 1;
 
-            // No direction held → dash in the direction the player is facing
             if (dx === 0 && dy === 0) {
                 dx = this.facingDir;
             }
-
-            // Track downward dashes for bounce
             this.dashedDown = dy > 0;
 
-            // Normalize so diagonal dashes aren't faster
             const len = Math.sqrt(dx * dx + dy * dy);
             dx /= len;
             dy /= len;
@@ -114,7 +140,7 @@ export default class Player {
 
             this.scene.time.delayedCall(dashDuration, () => {
                 this.isDashing = false;
-                this.sprite.setVelocity(0, this.sprite.body.velocity.y);
+                this.sprite.setVelocity(0, body.velocity.y);
             });
 
             this.scene.time.delayedCall(dashCooldown, () => {
@@ -122,20 +148,21 @@ export default class Player {
             });
         }
 
-        // --- Variable Gravity ---
-        const vy = this.sprite.body.velocity.y;
-        if (!onGround && vy > 0) {
-            const extraGravity = this.config.gravity * (this.config.fallGravityMultiplier - 1);
-            this.sprite.body.setGravityY(extraGravity);
+        // --- Variable Gravity (rise deceleration + fast fall) ---
+        const vy = body.velocity.y;
+        if (!onGround && vy < 0) {
+            body.setGravityY(gravity * (riseGravityMultiplier - 1));
+        } else if (!onGround && vy > 0) {
+            body.setGravityY(gravity * (fallGravityMultiplier - 1));
         } else {
-            this.sprite.body.setGravityY(0);
+            body.setGravityY(0);
         }
 
         // --- Animations ---
         if (moving && !this.isMoving) {
             this.sprite.play('startRun');
             this.sprite.once('animationcomplete', () => {
-                if (Math.abs(this.sprite.body.velocity.x) > 5) {
+                if (Math.abs(body.velocity.x) > 5) {
                     this.sprite.play('runHold');
                 }
             });
@@ -151,12 +178,7 @@ export default class Player {
 
     updateFacing() {
         const vx = this.sprite.body.velocity.x;
-        if (vx < 0) {
-            this.facingDir = -1;
-            this.sprite.setFlipX(true);
-        } else if (vx > 0) {
-            this.facingDir = 1;
-            this.sprite.setFlipX(false);
-        }
+        if (vx < 0) { this.facingDir = -1; this.sprite.setFlipX(true); }
+        else if (vx > 0) { this.facingDir = 1; this.sprite.setFlipX(false); }
     }
 }

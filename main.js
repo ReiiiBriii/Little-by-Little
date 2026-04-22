@@ -6,6 +6,9 @@ new Phaser.Game({
     type: Phaser.AUTO,
     width: 800,
     height: 600,
+    input: {
+        gamepad: true
+    },
     scene: [MainMenu, Level1],
     physics: {
         default: 'arcade',
