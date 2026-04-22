@@ -36,13 +36,27 @@ export default class Player {
         }
 
         // movement
+        let walkSpeed = 160;
+        let jumpSpeed = -330;
+        let dashSpeed = 500;
+        let dashDuration = 150;
+        let dashCooldown = 1000;
+
         if (!this.isDashing) {
-            if (this.keys.A.isDown) this.sprite.setVelocityX(-160);
-            else if (this.keys.D.isDown) this.sprite.setVelocityX(160);
-            else this.sprite.setVelocityX(0);
+            let currentVelocityX = this.sprite.body.velocity.x;
+
+            if (this.keys.A.isDown) {
+                this.sprite.setVelocityX(-walkSpeed);
+            } 
+            else if (this.keys.D.isDown) {
+                this.sprite.setVelocityX(walkSpeed);
+            } 
+            else {
+                this.sprite.setVelocityX(0);
+            }
 
             if (this.keys.SPACE.isDown && onGround) {
-                this.sprite.setVelocityY(-330);
+                this.sprite.setVelocityY(jumpSpeed);
             }
         }
 
@@ -63,14 +77,14 @@ export default class Player {
             x /= len;
             y /= len;
 
-            this.sprite.setVelocity(x * 500, y * 500);
+            this.sprite.setVelocity(x * dashSpeed, y * dashSpeed);
 
-            this.scene.time.delayedCall(150, () => {
+            this.scene.time.delayedCall(dashDuration, () => {
                 this.isDashing = false;
                 this.sprite.setVelocity(0, this.sprite.body.velocity.y);
             });
 
-            this.scene.time.delayedCall(1000, () => {
+            this.scene.time.delayedCall(dashCooldown, () => {
                 this.canDash = true;
             });
         }
