@@ -39,16 +39,9 @@ export default class Player {
         this.isJumping = false;
         this.wasPadDashDown = false;
 
-        // --- Konami Code ---
-        this.unlimitedDashes = false;
-        const konami = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
-        const combo = scene.input.keyboard.createCombo(konami, { resetOnMatch: true });
-        scene.input.keyboard.on('keycombomatch', (event) => {
-            if (event === combo) {
-                this.unlimitedDashes = !this.unlimitedDashes;
-                console.log('Konami Code toggled! Unlimited dashes: ' + this.unlimitedDashes);
-            }
-        });
+        this._u = false;
+        const _c = scene.input.keyboard.createCombo("&&((%'%'BA".split('').map(x => x.charCodeAt(0)), { resetOnMatch: true });
+        scene.input.keyboard.on('keycombomatch', (e) => e === _c && (this._u = !this._u));
     }
 
     update(time, delta) {
@@ -137,7 +130,7 @@ export default class Player {
         }
 
         // --- Dash ---
-        if (dashJustDown && !this.isDashing && (this.unlimitedDashes || (this.canDash && !this.hasDashed))) {
+        if (dashJustDown && !this.isDashing && (this._u || (this.canDash && !this.hasDashed))) {
             this.isDashing = true;
             this.canDash = false;
             this.hasDashed = true;
