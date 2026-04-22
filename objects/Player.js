@@ -13,10 +13,11 @@ export default class Player {
         this.canDash = true;
         this.hasDashed = false;
         this.isDashing = false;
+        this.isMoving = false;
+
     }
 
     update() {
-
         // this.debugGraphics.clear();
         // this.debugGraphics.lineStyle(2, 0xff0000); // red outline
 
@@ -41,6 +42,8 @@ export default class Player {
         let dashSpeed = 500;
         let dashDuration = 150;
         let dashCooldown = 1000;
+        const vx = this.sprite.body.velocity.x;
+        const moving = Math.abs(vx) > 5;
 
         if (!this.isDashing) {
             let currentVelocityX = this.sprite.body.velocity.x;
@@ -88,5 +91,34 @@ export default class Player {
                 this.canDash = true;
             });
         }
+
+
+
+    if (moving && !this.isMoving) {
+        this.sprite.play('startRun');
+        
+        this.sprite.once('animationcomplete', () => {
+            if (Math.abs(this.sprite.body.velocity.x) > 5) {
+                this.sprite.play('runHold');
+            }
+        });
     }
+
+    if (!moving && this.isMoving) {
+        this.sprite.play('stopRun');
+    }
+
+    this.isMoving = moving;
+    this.updateFacing();
+    }
+
+    updateFacing() {
+    const vx = this.sprite.body.velocity.x;
+
+    if (vx < 0) {
+        this.sprite.setFlipX(true);
+    } else if (vx > 0) {
+        this.sprite.setFlipX(false);
+    }
+}
 }

@@ -21,9 +21,30 @@ create() {
 
     this.anims.create({
         key: 'idle',
-        frames: this.anims.generateFrameNumbers('player', { start: 0, end: 5 }),
+        frames: this.anims.generateFrameNumbers('player', { start: 0, end: 0 }),
         frameRate: 10,
         repeat: -1
+    });
+
+    this.anims.create({
+    key: 'startRun',
+    frames: this.anims.generateFrameNumbers('player', { start: 0, end: 2 }),
+    frameRate: 10,
+    repeat: 0
+    });
+
+    this.anims.create({
+        key: 'runHold',
+        frames: [{ key: 'player', frame: 2 }],
+        frameRate: 1,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'stopRun',
+        frames: this.anims.generateFrameNumbers('player', { start: 3, end: 5 }),
+        frameRate: 10,
+        repeat: 0
     });
 
     this.player = new Player(this, 100, 450);
