@@ -25,7 +25,7 @@ export default class MemoryModule {
             this
         );
     }
-
+    // --- COLLECT MEMORY ---
     collect() {
     if (this.scene.collectedMemories.has(this.data.id)) return;
 

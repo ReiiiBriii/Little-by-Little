@@ -106,7 +106,6 @@ create() {
 
     const cleanText = text.trim();
 
-    // --- CENTERED TEXT ---
     const storyText = this.add.text(
         width / 2,
         height / 2,
@@ -122,7 +121,7 @@ create() {
     .setScrollFactor(0)
     .setDepth(101);
 
-    // --- TYPEWRITER ---
+    // --- TYPEWRITER EFFECT ---
     let displayed = '';
     let i = 0;
 
@@ -137,7 +136,7 @@ create() {
     
 });
 
-    // --- EXIT ---
+    // --- EXIT MEMORY MESSAGE---
         this.input.keyboard.once('keydown-SPACE', () => {
     if (this.memoryTimer) {
         this.memoryTimer.remove(false);
