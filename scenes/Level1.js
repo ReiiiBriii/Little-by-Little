@@ -1,6 +1,8 @@
 import * as Phaser from 'phaser';
 import Player from '../objects/Player.js';
 import GreasePath from '../objects/GreasePath.js';
+import MemoryModule from '../objects/MemoryModule.js';
+import memoryData from '../data/memoryData.js';
 
 export default class Level1 extends Phaser.Scene {
     constructor() {
@@ -18,7 +20,8 @@ export default class Level1 extends Phaser.Scene {
 
 create() {
     this.platforms = this.physics.add.staticGroup();
-    this.platforms.create(400, 580, 'ground').setScale(2).refreshBody();    
+    const width = this.scale.width;
+    const height = this.scale.height;
 
     this.anims.create({
         key: 'idle',
@@ -48,10 +51,9 @@ create() {
         repeat: 0
     });
 
-    this.player = new Player(this, 100, 450);
-
+    this.player = new Player(this, 100, height - 150);
     this.physics.add.collider(this.player.sprite, this.platforms);
-    this.grease = new GreasePath(this, 400, 500, 200, 50);
+    this.grease = new GreasePath(this, width / 2, height - 80, 200, 50);
     this.grease.setTexture('ground'); 
     this.grease.setDisplaySize(200, 50);
     this.grease.setTint(0xff0000);
@@ -65,9 +67,91 @@ create() {
         console.log('ON GREASE');
     });
 
+
+        const ground = this.platforms.create(width / 2, height - 20, 'ground');
+
+        ground.displayWidth = width;
+        ground.refreshBody();
+    
+    this.collectedMemories = new Set();
+    this.memoryModules = [];
+    
+
+    const mem1 = new MemoryModule(this, width / 2, height / 2, memoryData.log1);    
+    mem1.setupOverlap(this.player);
+    this.memoryModules.push(mem1);
+
 }
 
     update(time, delta) {
         this.player.update(time, delta);
     }
+    
+
+    showMemoryText(text) {
+    if (this.memoryActive) return;
+    this.memoryActive = true;
+
+    const width = this.scale.width;
+    const height = this.scale.height;
+
+    this.player.sprite.setVelocity(0, 0);
+    this.player.sprite.body.enable = false;
+
+    // --- FULL SCREEN OVERLAY ---
+    const overlay = this.add.rectangle(0, 0, width, height, 0x000000, 0.85)
+        .setOrigin(0)
+        .setScrollFactor(0)
+        .setDepth(100);
+
+    const cleanText = text.trim();
+
+    // --- CENTERED TEXT ---
+    const storyText = this.add.text(
+        width / 2,
+        height / 2,
+        '',
+        {
+            fontSize: '18px',
+            color: '#ffffff',
+            align: 'center',
+            wordWrap: { width: width * 0.7 }
+        }
+    )
+    .setOrigin(0.5)
+    .setScrollFactor(0)
+    .setDepth(101);
+
+    // --- TYPEWRITER ---
+    let displayed = '';
+    let i = 0;
+
+    this.memoryTimer = this.time.addEvent({
+    delay: 30,
+    repeat: cleanText.length - 1,
+    callback: () => {
+        displayed += cleanText[i];
+        storyText.setText(displayed);
+        i++;
+    }
+    
+});
+
+    // --- EXIT ---
+        this.input.keyboard.once('keydown-SPACE', () => {
+    if (this.memoryTimer) {
+        this.memoryTimer.remove(false);
+        this.memoryTimer = null;
+    }
+    
+
+    overlay.destroy();
+    storyText.destroy();
+
+    this.player.sprite.body.enable = true;
+    this.player.sprite.setVelocity(0, 0);
+
+    this.memoryActive = false;
+});
+}
 }

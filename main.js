@@ -4,8 +4,11 @@ import Level1 from './scenes/Level1.js';
 
 new Phaser.Game({
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    scale: {
+        mode: Phaser.Scale.RESIZE,
+        width: window.innerWidth,
+        height: window.innerHeight
+    },
     input: {
         gamepad: true
     },
