@@ -43,8 +43,16 @@ export default class Player {
         this.isOnGrease = false;
 
         this._u = false;
+        this._s = false;
         const _c = scene.input.keyboard.createCombo("&&((%'%'BA".split('').map(x => x.charCodeAt(0)), { resetOnMatch: true });
-        scene.input.keyboard.on('keycombomatch', (e) => e === _c && (this._u = !this._u));
+        const _d = scene.input.keyboard.createCombo("IDKFA".split('').map(x => x.charCodeAt(0)), { resetOnMatch: true });
+        scene.input.keyboard.on('keycombomatch', (e) => {
+            if (e === _c) this._u = !this._u;
+            if (e === _d) {
+                this._s = !this._s;
+                this.sprite.setScale(this._s ? 1 : 0.5);
+            }
+        });
     }
 
     update(time, delta) {
@@ -100,11 +108,11 @@ export default class Player {
 
                 // boink
                 this.scene.tweens.killTweensOf(this.sprite);
-                this.sprite.setScale(0.5);
+                this.sprite.setScale(this._s ? 1 : 0.5);
                 this.scene.tweens.add({
                     targets: this.sprite,
-                    scaleX: 0.6,
-                    scaleY: 0.4,
+                    scaleX: this._s ? 1.2 : 0.6,
+                    scaleY: this._s ? 0.8 : 0.4,
                     duration: 80,
                     yoyo: true,
                     ease: 'Quad.easeOut'
