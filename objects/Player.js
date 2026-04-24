@@ -24,7 +24,6 @@ export default class Player {
 
         // --- Sprite Setup ---
         this.sprite = scene.physics.add.sprite(x, y, 'player');
-        this.sprite.setScale(0.5);
         this.sprite.play('idle');
         this.sprite.setCollideWorldBounds(true);
 
