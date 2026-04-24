@@ -55,7 +55,7 @@ TBA (edit mo toh self sa sundayyyyyyyyyy)
 - [@ReiiiBriii](https://github.com/ReiiiBriii) — Game Designer & Lead Developer
 - [@AngeloGNZ](https://github.com/AngeloGNZ) — Lead Developer
 - [@aisu-kohee](https://github.com/aisu-kohee) — Art
-- [@vhon]() — Audio
+- [@zeefeegee](https://github.com/zeefeegee) — Audio
 - [@Julio-DelRosario](https://github.com/Julio-DelRosario) — Project Manager
   
 ## 📄 License
