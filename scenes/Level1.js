@@ -10,10 +10,10 @@ export default class Level1 extends Phaser.Scene {
     }
 
     preload() {
+        this.load.image('bgWall', 'assets/backgrounds/LabWall.png');
+        this.load.image('labProps', 'assets/sprites/image_b050df.png');
         this.load.tilemapTiledJSON('map', '/assets/maps/level1.tmj');
         this.load.image('tiles', 'assets/tiles/Ground1.png');;
-        this.cameras.main.zoom = .5;
-
         this.load.spritesheet('player', 'assets/sprites/Player.png', {
             frameWidth: 192,
             frameHeight: 192
@@ -21,17 +21,35 @@ export default class Level1 extends Phaser.Scene {
     }
 
     create() {
+        this.cameras.main.zoom = .5;
         const map = this.make.tilemap({ key: 'map' });
         const mapWidth = map.width * map.tileWidth;
         const mapHeight = map.height * map.tileHeight;
 
+        this.add.rectangle(400, 300, 20, 20, 0xff0000).setDepth(999);
+
         this.physics.world.setBounds(0, 0, mapWidth, mapHeight);
 
+        this.bg = this.add.image(0, 0, 'bgWall')
+        .setOrigin(0)
+        .setDisplaySize(mapWidth, mapHeight)
+        .setDepth(-10);
 
-        // ⚠️ MAKE SURE "Ground1" MATCHES YOUR TMJ TILESET NAME
+        this.props = this.add.container(0, 0);
+        this.props.setDepth(-5);
+
+        this.props.add(this.add.image(400, 300, 'labProps')
+            .setOrigin(0.5));
+            
+        this.props.add(this.add.image(800, 500, 'labProps')
+            .setOrigin(0.5)
+            .setScale(1.5));
+
+        this.props.add(this.add.image(200, 600, 'labProps')
+            .setOrigin(0.5));
+
         const tileset = map.addTilesetImage('Ground1', 'tiles');
 
-        // ⚠️ MAKE SURE LAYER NAME MATCHES TMJ
         const layer = map.createLayer('Tile Layer 1', tileset, 0, 0);
         layer.setDepth(0);        
         const objectLayer = map.getObjectLayer('Objects');
