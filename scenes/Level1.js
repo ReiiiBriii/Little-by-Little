@@ -28,14 +28,14 @@ create() {
     }
 
     // for testings fr
-    this.platforms.create(600, mapHeight - 150, 'ground').refreshBody();
-    this.platforms.create(1000, mapHeight - 300, 'ground').refreshBody();
-    this.platforms.create(400, mapHeight - 450, 'ground').refreshBody();
-    this.platforms.create(800, mapHeight - 600, 'ground').refreshBody();
-    this.platforms.create(1200, mapHeight - 750, 'ground').refreshBody();
-    this.platforms.create(1600, mapHeight - 350, 'ground').refreshBody();
-    this.platforms.create(2000, mapHeight - 500, 'ground').refreshBody();
-    this.platforms.create(1800, mapHeight - 800, 'ground').refreshBody();
+    this.platforms.create(600, mapHeight - 220, 'ground').refreshBody();
+    this.platforms.create(1000, mapHeight - 390, 'ground').refreshBody();
+    this.platforms.create(400, mapHeight - 560, 'ground').refreshBody();
+    this.platforms.create(800, mapHeight - 680, 'ground').refreshBody();
+    this.platforms.create(1200, mapHeight - 800, 'ground').refreshBody();
+    this.platforms.create(1600, mapHeight - 400, 'ground').refreshBody();
+    this.platforms.create(2000, mapHeight - 550, 'ground').refreshBody();
+    this.platforms.create(1800, mapHeight - 850, 'ground').refreshBody();
     
 
     this.anims.create({

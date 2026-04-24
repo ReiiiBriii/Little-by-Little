@@ -6,7 +6,7 @@ export default class Player {
 
         // --- Physics & Movement Config ---
         this.config = {
-            walkSpeed: 230,
+            walkSpeed: 280,
             jumpForce: -480,
             riseGravityMultiplier: 2.0,
             fallGravityMultiplier: 4.5,
@@ -38,17 +38,21 @@ export default class Player {
         this.dashedDown = false;
         this.isJumping = false;
         this.wasPadDashDown = false;
+        this.wasPadJumpDown = false;
 
         this._u = false;
         this._s = false;
+        this._i = false;
         const _c = scene.input.keyboard.createCombo("&&((%'%'BA".split('').map(x => x.charCodeAt(0)), { resetOnMatch: true });
-        const _d = scene.input.keyboard.createCombo("IDKFA".split('').map(x => x.charCodeAt(0)), { resetOnMatch: true });
+        const _d = scene.input.keyboard.createCombo([73, 68, 75, 70, 65], { resetOnMatch: true });
+        const _i = scene.input.keyboard.createCombo([73, 83, 69, 69, 68, 69, 65, 68, 80, 69, 79, 80, 76, 69], { resetOnMatch: true });
         scene.input.keyboard.on('keycombomatch', (e) => {
             if (e === _c) this._u = !this._u;
             if (e === _d) {
                 this._s = !this._s;
                 this.sprite.setScale(this._s ? 1 : 0.5);
             }
+            if (e === _i) this._i = !this._i;
         });
     }
 
@@ -75,7 +79,13 @@ export default class Player {
         const wantUp = this.keys.W.isDown || (pad && (pad.up || lsY < -0.4));
         const wantDown = this.keys.S.isDown || (pad && (pad.down || lsY > 0.4));
 
-        const jumpDown = this.keys.SPACE.isDown || (pad && (pad.A || pad.B));
+        const padJumpDown = pad && (pad.A || pad.B);
+        const jumpDown = this.keys.SPACE.isDown || padJumpDown;
+        let jumpJustDown = Phaser.Input.Keyboard.JustDown(this.keys.SPACE);
+        if (padJumpDown && !this.wasPadJumpDown) {
+            jumpJustDown = true;
+        }
+        this.wasPadJumpDown = padJumpDown;
         
         let dashJustDown = Phaser.Input.Keyboard.JustDown(this.keys.SHIFT);
         const padDashDown = pad && (pad.X || pad.Y || pad.R1 || pad.R2);
@@ -112,8 +122,9 @@ export default class Player {
         if (!this.isDashing) {
             if (wantLeft || wantRight) {
                 // vroom
-                const targetVx = wantLeft ? -walkSpeed : walkSpeed;
-                const newVx = Phaser.Math.Linear(vx, targetVx, acceleration * dt / walkSpeed);
+                const currentWalkSpeed = this._i ? walkSpeed * 2 : walkSpeed;
+                const targetVx = wantLeft ? -currentWalkSpeed : currentWalkSpeed;
+                const newVx = Phaser.Math.Linear(vx, targetVx, acceleration * dt / currentWalkSpeed);
                 this.sprite.setVelocityX(newVx);
             } else {
                 // slow bro
@@ -126,7 +137,7 @@ export default class Player {
                 }
             }
 
-            if (jumpDown && onGround && !this.isJumping) {
+            if ((jumpDown && onGround && !this.isJumping) || (jumpJustDown && this._i)) {
                 this.sprite.setVelocityY(jumpForce);
                 this.isJumping = true;
             }
