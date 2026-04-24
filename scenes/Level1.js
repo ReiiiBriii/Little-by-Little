@@ -19,9 +19,28 @@ export default class Level1 extends Phaser.Scene {
 }
 
 create() {
+    const mapWidth = 2400;
+    const mapHeight = 1200;
+
+    this.physics.world.setBounds(0, 0, mapWidth, mapHeight);
+
     this.platforms = this.physics.add.staticGroup();
-    const width = this.scale.width;
-    const height = this.scale.height;
+    
+    // repeat the floor my dudes
+    for (let x = 0; x < mapWidth; x += 800) {
+        this.platforms.create(x + 400, mapHeight - 20, 'ground').setScale(2).refreshBody();
+    }
+
+    // for testings fr
+    this.platforms.create(600, mapHeight - 150, 'ground').refreshBody();
+    this.platforms.create(1000, mapHeight - 300, 'ground').refreshBody();
+    this.platforms.create(400, mapHeight - 450, 'ground').refreshBody();
+    this.platforms.create(800, mapHeight - 600, 'ground').refreshBody();
+    this.platforms.create(1200, mapHeight - 750, 'ground').refreshBody();
+    this.platforms.create(1600, mapHeight - 350, 'ground').refreshBody();
+    this.platforms.create(2000, mapHeight - 500, 'ground').refreshBody();
+    this.platforms.create(1800, mapHeight - 800, 'ground').refreshBody();
+    
 
     this.anims.create({
         key: 'idle',
@@ -51,36 +70,13 @@ create() {
         repeat: 0
     });
 
-    this.player = new Player(this, 100, height - 150);
+    this.player = new Player(this, 100, mapHeight - 150);
+
     this.physics.add.collider(this.player.sprite, this.platforms);
-    this.grease = new GreasePath(this, width / 2, height - 80, 200, 50);
-    this.grease.setTexture('ground'); 
-    this.grease.setDisplaySize(200, 50);
-    this.grease.setTint(0xff0000);
-    this.grease.setDepth(1);
-    this.grease.setAlpha(0.5);
-    this.grease.setAlpha(0.3);
 
-    this.physics.add.overlap(this.player.sprite, this.grease, () => {
-        this.grease.applyEffect(this.player);
-        this.player.isOnGrease = true;
-        console.log('ON GREASE');
-    });
-
-
-        const ground = this.platforms.create(width / 2, height - 20, 'ground');
-
-        ground.displayWidth = width;
-        ground.refreshBody();
-    
-    this.collectedMemories = new Set();
-    this.memoryModules = [];
-    
-
-    const mem1 = new MemoryModule(this, width / 2, height / 2, memoryData.log1);    
-    mem1.setupOverlap(this.player);
-    this.memoryModules.push(mem1);
-
+    // Camera setup Basically GJ-7
+    this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
+    this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
 }
 
     update(time, delta) {
