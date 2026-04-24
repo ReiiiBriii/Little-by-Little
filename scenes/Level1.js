@@ -15,8 +15,27 @@ export default class Level1 extends Phaser.Scene {
 }
 
 create() {
+    const mapWidth = 2400;
+    const mapHeight = 1200;
+
+    this.physics.world.setBounds(0, 0, mapWidth, mapHeight);
+
     this.platforms = this.physics.add.staticGroup();
-    this.platforms.create(400, 580, 'ground').setScale(2).refreshBody();
+    
+    // repeat the floor my dudes
+    for (let x = 0; x < mapWidth; x += 800) {
+        this.platforms.create(x + 400, mapHeight - 20, 'ground').setScale(2).refreshBody();
+    }
+
+    // for testings fr
+    this.platforms.create(600, mapHeight - 150, 'ground').refreshBody();
+    this.platforms.create(1000, mapHeight - 300, 'ground').refreshBody();
+    this.platforms.create(400, mapHeight - 450, 'ground').refreshBody();
+    this.platforms.create(800, mapHeight - 600, 'ground').refreshBody();
+    this.platforms.create(1200, mapHeight - 750, 'ground').refreshBody();
+    this.platforms.create(1600, mapHeight - 350, 'ground').refreshBody();
+    this.platforms.create(2000, mapHeight - 500, 'ground').refreshBody();
+    this.platforms.create(1800, mapHeight - 800, 'ground').refreshBody();
     
 
     this.anims.create({
@@ -47,9 +66,13 @@ create() {
         repeat: 0
     });
 
-    this.player = new Player(this, 100, 450);
+    this.player = new Player(this, 100, mapHeight - 150);
 
     this.physics.add.collider(this.player.sprite, this.platforms);
+
+    // Camera setup Basically GJ-7
+    this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
+    this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
 }
 
     update(time, delta) {
