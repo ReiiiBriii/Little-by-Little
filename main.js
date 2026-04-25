@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import MainMenu from './scenes/MainMenu.js';
 import Level1 from './scenes/Level1.js';
+import Level2 from './scenes/Level2.js';
 
 new Phaser.Game({
     type: Phaser.AUTO,
@@ -12,7 +13,7 @@ new Phaser.Game({
     input: {
         gamepad: true
     },
-    scene: [MainMenu, Level1],
+    scene: [MainMenu, Level1, Level2],
     physics: {
         default: 'arcade',
         arcade: {

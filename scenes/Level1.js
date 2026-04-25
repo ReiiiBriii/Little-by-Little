@@ -22,6 +22,7 @@ export default class Level1 extends Phaser.Scene {
 
     create() {
     this.cameras.main.zoom = 0.5;
+    this.transitionTriggered = false;
     // Animations
     if (!this.anims.exists('idle')) {
         this.anims.create({
@@ -80,7 +81,25 @@ export default class Level1 extends Phaser.Scene {
     
     // Object layer
     const objectLayer = map.getObjectLayer('Objects');
-    const spawnPoint = objectLayer?.objects?.find(obj => obj.name === 'spawn');
+    
+    // Check if coming from Level2
+    const comingFromLevel2 = this.registry.get('comingFromLevel2') || false;
+    console.log('Coming from Level2:', comingFromLevel2);
+    
+    let spawnPoint;
+    if (comingFromLevel2) {
+        spawnPoint = objectLayer?.objects?.find(obj => obj.name === 'fromLevel2');
+        console.log('Using fromLevel2 spawn point:', spawnPoint);
+        this.registry.set('comingFromLevel2', false); // Reset the flag
+        
+        if (!spawnPoint) {
+            console.log('fromLevel2 not found, falling back to default spawn');
+            spawnPoint = objectLayer?.objects?.find(obj => obj.name === 'default');
+        }
+    } else {
+        spawnPoint = objectLayer?.objects?.find(obj => obj.name === 'default');
+        console.log('Using default spawn point:', spawnPoint);
+    }
 
     if (!spawnPoint) {
         console.error('Spawn point not found');
@@ -92,6 +111,36 @@ export default class Level1 extends Phaser.Scene {
     this.physics.add.collider(this.player.sprite, layer1);
     this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
     this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
+
+    // Level transition zone
+    const transitionPoint = objectLayer?.objects?.find(obj => obj.name === 'transition');
+    console.log('Transition point found:', transitionPoint);
+    if (transitionPoint) {
+        console.log('Transition point position:', transitionPoint.x, transitionPoint.y);
+        console.log('Transition point size:', transitionPoint.width, transitionPoint.height);
+        
+        this.exitZone = this.add.rectangle(
+            transitionPoint.x,
+            transitionPoint.y,
+            Math.max(transitionPoint.width || 64, 128),
+            Math.max(transitionPoint.height || 64, 128)
+        ).setOrigin(0.5);
+        
+        this.physics.add.existing(this.exitZone, true);
+        this.physics.add.overlap(this.player.sprite, this.exitZone, () => {
+            if (!this.transitionTriggered) {
+                console.log('Transition triggered!');
+                this.transitionTriggered = true;
+                this.transitionToLevel2();
+            }
+        });
+        
+        // Make the zone visible for debugging
+        this.exitZone.setFillStyle(0xff0000, 0.3);
+        console.log('Transition zone created at:', this.exitZone.x, this.exitZone.y);
+    } else {
+        console.log('No transition point found in the map!');
+    }
 }
 
     update(time, delta) {
@@ -156,6 +205,15 @@ export default class Level1 extends Phaser.Scene {
             this.player.sprite.setVelocity(0, 0);
 
             this.memoryActive = false;
+        });
+    }
+
+    transitionToLevel2() {
+        console.log('Starting transition to Level2...');
+        this.cameras.main.fadeOut(200, 0, 0, 0);
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+            console.log('Fade complete, starting Level2 scene');
+            this.scene.start('level2');
         });
     }
 }

@@ -114,14 +114,66 @@
                 {
                  "height":0,
                  "id":2,
-                 "name":"spawn",
+                 "name":"default",
                  "opacity":1,
+                 "properties":[
+                        {
+                         "name":"type",
+                         "type":"string",
+                         "value":"spawn"
+                        }],
                  "rotation":0,
                  "type":"",
                  "visible":true,
                  "width":0,
                  "x":1436.36363636364,
                  "y":1818.18181818182
+                }, 
+                {
+                 "height":378.060606060606,
+                 "id":3,
+                 "name":"transition",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"targetLevel",
+                         "type":"string",
+                         "value":"level2"
+                        }, 
+                        {
+                         "name":"targetSpawn",
+                         "type":"string",
+                         "value":"fromLevel1"
+                        }, 
+                        {
+                         "name":"type",
+                         "type":"string",
+                         "value":"transition"
+                        }],
+                 "rotation":180.414584514942,
+                 "type":"",
+                 "visible":true,
+                 "width":90.5454545454545,
+                 "x":3836.29769570039,
+                 "y":2111.98930256423
+                }, 
+                {
+                 "height":0,
+                 "id":9,
+                 "name":"fromLevel2",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"type",
+                         "type":"string",
+                         "value":"spawn"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":3648,
+                 "y":1920
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -130,7 +182,7 @@
          "y":0
         }],
  "nextlayerid":8,
- "nextobjectid":3,
+ "nextobjectid":11,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.1",
