@@ -27,15 +27,19 @@ create() {
         this.platforms.create(x + 400, mapHeight - 20, 'ground').setScale(2).refreshBody();
     }
 
-    // for testings fr
-    this.platforms.create(600, mapHeight - 220, 'ground').refreshBody();
-    this.platforms.create(1000, mapHeight - 390, 'ground').refreshBody();
-    this.platforms.create(400, mapHeight - 560, 'ground').refreshBody();
-    this.platforms.create(800, mapHeight - 680, 'ground').refreshBody();
-    this.platforms.create(1200, mapHeight - 800, 'ground').refreshBody();
-    this.platforms.create(1600, mapHeight - 400, 'ground').refreshBody();
-    this.platforms.create(2000, mapHeight - 550, 'ground').refreshBody();
-    this.platforms.create(1800, mapHeight - 850, 'ground').refreshBody();
+    // Flappy bird style vertical platforms
+    for (let x = 600; x < mapWidth; x += 400) {
+        // Raise the gap so the bottom pipe actually sticks out of the floor!
+        let gapY = Phaser.Math.Between(mapHeight - 450, mapHeight - 300); 
+        let gapSize = 250; // Gap for the player to pass through
+        
+        // The image is 64px tall. Scaled by 20, it's 1280px tall. So the center offset is 640px.
+        // Top pipe
+        this.platforms.create(x, gapY - gapSize / 2 - 640, 'ground').setScale(0.2, 20).refreshBody();
+        
+        // Bottom pipe
+        this.platforms.create(x, gapY + gapSize / 2 + 640, 'ground').setScale(0.2, 20).refreshBody();
+    }
     
 
     this.anims.create({
