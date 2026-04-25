@@ -3,8 +3,19 @@ export default class MemoryModule {
         this.scene = scene;
         this.data = data;
 
-        this.sprite = scene.physics.add.sprite(x, y, 'memory');
+        console.log('Creating memory sprite at:', x, y, 'with collectibles sprite');
+        console.log('Available textures:', scene.textures.getTextureKeys());
+        this.sprite = scene.physics.add.sprite(x, y, 'collectibles', 0);
         this.sprite.setImmovable(true);
+        this.sprite.setDepth(1000); // Set very high depth to ensure it's visible
+        this.sprite.setTint(0xffffff); // Ensure sprite is white (no tint)
+        this.sprite.setAlpha(1); // Ensure full opacity
+        this.sprite.body.setAllowGravity(false); // Disable gravity to prevent falling
+        console.log('Memory sprite created:', this.sprite);
+        console.log('Sprite texture:', this.sprite.texture.key);
+        console.log('Sprite frame:', this.sprite.frame.name);
+        console.log('Sprite visible:', this.sprite.visible);
+        console.log('Sprite alpha:', this.sprite.alpha);
 
         scene.tweens.add({
             targets: this.sprite,
@@ -30,6 +41,9 @@ export default class MemoryModule {
     if (this.scene.collectedMemories.has(this.data.id)) return;
 
     this.scene.collectedMemories.add(this.data.id);
+    
+    // Save to registry for persistence between levels
+    this.scene.registry.set('collectedMemories', this.scene.collectedMemories);
 
     this.sprite.destroy();
     this.scene.showMemoryText(this.data.text);

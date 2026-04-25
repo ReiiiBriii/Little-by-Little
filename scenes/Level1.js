@@ -18,10 +18,14 @@ export default class Level1 extends Phaser.Scene {
             frameWidth: 192,
             frameHeight: 192
         });
+        this.load.spritesheet('collectibles', 'assets/collectibles/Chapter1Items.png', {
+            frameWidth: 192,
+            frameHeight: 192
+        });
     }
 
     create() {
-    this.cameras.main.zoom = .7;
+    this.cameras.main.zoom = .6;
     this.transitionTriggered = false;
     // Animations
     if (!this.anims.exists('idle')) {
@@ -112,6 +116,25 @@ export default class Level1 extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
     this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
 
+    // Initialize collected memories set from registry or create new
+    this.collectedMemories = this.registry.get('collectedMemories') || new Set();
+    this.memoryActive = false;
+
+    // Create memory module at fixed map position only if not already collected
+    const memoryModuleX = 2500; // Fixed X position on map
+    const memoryModuleY = 2000; // Fixed Y position on map
+    
+    if (!this.collectedMemories.has('log1')) {
+        console.log('Creating memory module at fixed position:', memoryModuleX, memoryModuleY);
+        const memoryModule = new MemoryModule(this, memoryModuleX, memoryModuleY, memoryData.log1);
+        memoryModule.setupOverlap(this.player);
+        console.log('Memory module created:', memoryModule);
+        memoryModule.sprite.setVisible(true);
+        memoryModule.sprite.scale = 1;
+    } else {
+        console.log('Memory module log1 already collected, skipping creation');
+    }
+
     // Level transition zone
     const transitionPoint = objectLayer?.objects?.find(obj => obj.name === 'transition');
     console.log('Transition point found:', transitionPoint);
@@ -151,13 +174,10 @@ export default class Level1 extends Phaser.Scene {
         if (this.memoryActive) return;
         this.memoryActive = true;
 
-        const width = this.scale.width;
-        const height = this.scale.height;
-
         this.player.sprite.setVelocity(0, 0);
         this.player.sprite.body.enable = false;
 
-        const overlay = this.add.rectangle(0, 0, width, height, 0x000000, 0.85)
+        const overlay = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.7)
             .setOrigin(0)
             .setScrollFactor(0)
             .setDepth(100);
@@ -165,14 +185,14 @@ export default class Level1 extends Phaser.Scene {
         const cleanText = text.trim();
 
         const storyText = this.add.text(
-            width / 2,
-            height / 2,
+            this.scale.width / 2,
+            this.scale.height / 2,
             '',
             {
-                fontSize: '18px',
+                fontSize: '64px',
                 color: '#ffffff',
                 align: 'center',
-                wordWrap: { width: width * 0.7 }
+                wordWrap: { width: this.scale.width * 0.8 }
             }
         )
         .setOrigin(0.5)

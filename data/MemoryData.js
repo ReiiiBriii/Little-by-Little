@@ -1,11 +1,11 @@
 const memoryData = {
     log1: {
         id: 'log1',
-        text: `
-Go forward
-Collect your missing pieces
-You are humanity's legacy
-Preserve the past, shape the future 
+        text: ` Memory log 1: The Instruction
+You are built to continue
+Keep moving forward
+Gather the memories and parts of yourself
+Fragments once lost will belong to you again.
         `.trim()
     },
 
