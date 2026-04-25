@@ -44,6 +44,7 @@ export default class Player {
         this.wasPadDashDown = false;
         this.isOnGrease = false;
         this.wasPadJumpDown = false;
+        this.hasCollectedMemory = false;
 
         this._u = false;
         this._s = false;
@@ -151,7 +152,7 @@ export default class Player {
                 }
             }
 
-            if ((jumpDown && onGround && !this.isJumping) || (jumpJustDown && this._i)) {
+            if (((jumpDown && onGround && !this.isJumping) || (jumpJustDown && this._i)) && this.hasCollectedMemory) {
                 this.sprite.setVelocityY(jumpForce);
                 this.isJumping = true;
             }
@@ -166,7 +167,7 @@ export default class Player {
             this.sprite.setVelocityX(reduced > 0 ? sign * reduced : 0);
         }
         // --- Jump ---
-        if (jumpDown && onGround && !this.isJumping) {
+        if (jumpDown && onGround && !this.isJumping && this.hasCollectedMemory) {
             this.sprite.setVelocityY(jumpForce);
             this.isJumping = true;
         }

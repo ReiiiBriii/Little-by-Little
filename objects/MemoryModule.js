@@ -28,6 +28,7 @@ export default class MemoryModule {
     }
 
     setupOverlap(player) {
+        this.player = player;
         this.scene.physics.add.overlap(
             player.sprite,
             this.sprite,

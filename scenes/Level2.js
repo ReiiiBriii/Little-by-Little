@@ -22,7 +22,7 @@ export default class Level2 extends Phaser.Scene {
     }
 
     create() {
-        this.cameras.main.zoom = 0.5;
+        this.cameras.main.zoom = 0.6;
         this.transitionTriggered = false;
         
         // Animations
@@ -108,6 +108,14 @@ export default class Level2 extends Phaser.Scene {
         }
 
         this.player = new Player(this, spawnPoint.x, spawnPoint.y);
+        
+        // Check if spring has been collected from Level1
+        const springCollected = this.registry.get('springCollected') || false;
+        if (springCollected) {
+            // Enable jumping for player if spring was collected in Level1
+            this.player.hasCollectedMemory = true;
+            console.log('Spring already collected in Level1, jumping enabled in Level2');
+        }
         
         // Add colliders for both layers AFTER player is created
         this.physics.add.collider(this.player.sprite, layer1);

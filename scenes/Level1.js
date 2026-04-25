@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import Player from '../objects/Player.js';
 import GreasePath from '../objects/GreasePath.js';
 import MemoryModule from '../objects/MemoryModule.js';
+import Spring from '../objects/Spring.js';
 import memoryData from '../data/memoryData.js';
 
 export default class Level1 extends Phaser.Scene {
@@ -120,9 +121,29 @@ export default class Level1 extends Phaser.Scene {
     this.collectedMemories = this.registry.get('collectedMemories') || new Set();
     this.memoryActive = false;
 
+    // Check if spring has been collected in previous level
+    const springCollected = this.registry.get('springCollected') || false;
+    if (springCollected) {
+        // Enable jumping for player if spring was already collected
+        this.player.hasCollectedMemory = true;
+        console.log('Spring already collected, jumping enabled');
+    }
+
     // Create memory module at fixed map position only if not already collected
     const memoryModuleX = 2500; // Fixed X position on map
     const memoryModuleY = 2000; // Fixed Y position on map
+    
+    // Create spring collectible next to memory module only if not already collected
+    if (!springCollected) {
+        const springX = memoryModuleX + 200; // 200 pixels to the right of memory module
+        const springY = memoryModuleY; // Same Y position as memory module
+        console.log('Creating spring next to memory module at:', springX, springY);
+        const spring = new Spring(this, springX, springY);
+        spring.setupOverlap(this.player);
+        console.log('Spring created:', spring);
+    } else {
+        console.log('Spring already collected, not spawning spring');
+    }
     
     if (!this.collectedMemories.has('log1')) {
         console.log('Creating memory module at fixed position:', memoryModuleX, memoryModuleY);
@@ -150,6 +171,11 @@ export default class Level1 extends Phaser.Scene {
         ).setOrigin(0.5);
         
         this.physics.add.existing(this.exitZone, true);
+        
+        // Make the zone visible for debugging
+        this.exitZone.setFillStyle(0xff0000, 0.3);
+        console.log('Transition zone created at:', this.exitZone.x, this.exitZone.y);
+        
         this.physics.add.overlap(this.player.sprite, this.exitZone, () => {
             if (!this.transitionTriggered) {
                 console.log('Transition triggered!');
@@ -157,14 +183,10 @@ export default class Level1 extends Phaser.Scene {
                 this.transitionToLevel2();
             }
         });
-        
-        // Make the zone visible for debugging
-        this.exitZone.setFillStyle(0xff0000, 0.3);
-        console.log('Transition zone created at:', this.exitZone.x, this.exitZone.y);
     } else {
-        console.log('No transition point found in the map!');
+        console.log('No transition point found in map!');
     }
-}
+    }
 
     update(time, delta) {
         this.player.update(time, delta);
