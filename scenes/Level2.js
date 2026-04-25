@@ -10,7 +10,7 @@ export default class Level2 extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image('groundTiles', 'assets/tiles/Ground1.png');
+        this.load.image('HallwayGround', 'assets/tiles/Hallway tileset.png');
         this.load.image('wallTiles', 'assets/backgrounds/LabWall.png');
         this.load.image('assetTiles', 'assets/backgrounds/LabAssets.png');
         this.load.image('steelBeams', 'assets/tiles/Steel Beams.png');
@@ -64,7 +64,7 @@ export default class Level2 extends Phaser.Scene {
 
         // Map  
         const map = this.make.tilemap({ key: 'map2' });
-        const groundTiles = map.addTilesetImage('Ground1', 'groundTiles');
+        const groundTiles = map.addTilesetImage('HallwayGround', 'HallwayGround');
         const steelBeams = map.addTilesetImage('Steel Beams', 'steelBeams');
         
         console.log('Tilesets loaded:', {
