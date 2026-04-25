@@ -13,6 +13,7 @@ export default class Level2 extends Phaser.Scene {
         this.load.image('groundTiles', 'assets/tiles/Ground1.png');
         this.load.image('wallTiles', 'assets/backgrounds/LabWall.png');
         this.load.image('assetTiles', 'assets/backgrounds/LabAssets.png');
+        this.load.image('steelBeams', 'assets/tiles/Steel Beams.png');
         this.load.tilemapTiledJSON('map2', '/assets/maps/level2.tmj');
         this.load.spritesheet('player', 'assets/sprites/Player.png', {
             frameWidth: 192,
@@ -64,18 +65,34 @@ export default class Level2 extends Phaser.Scene {
         // Map  
         const map = this.make.tilemap({ key: 'map2' });
         const groundTiles = map.addTilesetImage('Ground1', 'groundTiles');
-        const wallTiles = map.addTilesetImage('LabWall', 'wallTiles');
-        const assetTiles = map.addTilesetImage('LabAssets', 'assetTiles');
-        const allTilesets = [groundTiles, wallTiles, assetTiles];
+        const steelBeams = map.addTilesetImage('Steel Beams', 'steelBeams');
+        
+        console.log('Tilesets loaded:', {
+            groundTiles: !!groundTiles,
+            steelBeams: !!steelBeams
+        });
+        
+        const allTilesets = [groundTiles, steelBeams];
 
         const layer1 = map.createLayer('Tile Layer 1', allTilesets, 0, 0);
         layer1.setCollisionByExclusion([-1], true);
         
         // Layers
-        const bgLayer = map.createLayer('Background', allTilesets, 0, 0);
-        const propsLayer = map.createLayer('Props', allTilesets, 0, 0);
-        const props2Layer = map.createLayer('Props 2', allTilesets, 0, 0);
-
+        const layer2 = map.createLayer('Tile Layer 2', allTilesets, 0, 0);
+        
+        // Set collision for steel beams on both layers
+        layer1.setCollision([17, 18, 19, 20]);
+        layer2.setCollision([17, 18, 19, 20]);
+        
+        // Also try setting collision by property for steel beams
+        map.setCollisionByProperty({ collides: true }, true, true, layer1);
+        map.setCollisionByProperty({ collides: true }, true, true, layer2);
+        
+        // Debug: Check if steel beams are actually in the layers
+        const steelBeamCount1 = layer1.filterTiles(tile => tile.index >= 17 && tile.index <= 20).length;
+        const steelBeamCount2 = layer2.filterTiles(tile => tile.index >= 17 && tile.index <= 20).length;
+        console.log('Steel beams found - Layer1:', steelBeamCount1, 'Layer2:', steelBeamCount2);
+        
         const mapWidth = map.width * map.tileWidth;
         const mapHeight = map.height * map.tileHeight;
 
@@ -91,7 +108,12 @@ export default class Level2 extends Phaser.Scene {
         }
 
         this.player = new Player(this, spawnPoint.x, spawnPoint.y);
+        
+        // Add colliders for both layers AFTER player is created
         this.physics.add.collider(this.player.sprite, layer1);
+        this.physics.add.collider(this.player.sprite, layer2);
+        console.log('Colliders added for both layers');
+        
         this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
         this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
 

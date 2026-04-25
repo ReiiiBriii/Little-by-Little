@@ -21,7 +21,7 @@ export default class Level1 extends Phaser.Scene {
     }
 
     create() {
-    this.cameras.main.zoom = 0.5;
+    this.cameras.main.zoom = .7;
     this.transitionTriggered = false;
     // Animations
     if (!this.anims.exists('idle')) {
