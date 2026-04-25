@@ -7,17 +7,17 @@ export default class Player {
 
         // --- Physics & Movement Config ---
         this.config = {
-            walkSpeed: 280,
-            jumpForce: -480,
+            walkSpeed: 700,
+            jumpForce: -960,
             riseGravityMultiplier: 2.0,
             fallGravityMultiplier: 4.5,
             jumpCutMultiplier: 0.4,
-            dashSpeed: 1000,
-            dashDuration: 150,
-            dashCooldown: 0,
+            dashSpeed: 2500,
+            dashDuration: 200,
+            dashCooldown: 200,
             gravity: 300,
             friction: 500,
-            acceleration: 800,
+            acceleration: 1250,
             dashBounceForce: -200,
             dashMultiplier: 1.0
         };
@@ -56,7 +56,7 @@ export default class Player {
             if (e === _c) this._u = !this._u;
             if (e === _d) {
                 this._s = !this._s;
-                this.sprite.setScale(this._s ? 1 : 0.5);
+                this.sprite.setScale(this._s ? 2 : 1);
             }
             if (e === _i) this._i = !this._i;
         });
@@ -105,14 +105,6 @@ export default class Player {
         if (onGround) {
             this.hasDashed = false;
             this.isJumping = false;
-        // --- Grease Effect ---
-        if (this.isOnGrease) {
-            this.frictionMultiplier = 0.2;
-            this.dashMultiplier = 1.6; // tweak this
-
-        } else {
-            this.frictionMultiplier = Phaser.Math.Linear(this.frictionMultiplier, 1, 0.1);
-        }
 
             // Downward-dash bounce
             if (this.dashedDown) {
@@ -121,11 +113,11 @@ export default class Player {
 
                 // boink
                 this.scene.tweens.killTweensOf(this.sprite);
-                this.sprite.setScale(this._s ? 1 : 0.5);
+                this.sprite.setScale(this._s ? 2 : 1);
                 this.scene.tweens.add({
                     targets: this.sprite,
-                    scaleX: this._s ? 1.2 : 0.6,
-                    scaleY: this._s ? 0.8 : 0.4,
+                    scaleX: this._s ? 2.4 : 1.2,
+                    scaleY: this._s ? 1.6 : 0.8,
                     duration: 80,
                     yoyo: true,
                     ease: 'Quad.easeOut'
@@ -159,13 +151,6 @@ export default class Player {
 
             const control = Phaser.Math.Clamp(this.frictionMultiplier * 2, 0.2, 1);
         } 
-        else {
-            const sign = Math.sign(vx);
-            const effectiveFriction = friction * this.frictionMultiplier;
-            const reduced = Math.abs(vx) - effectiveFriction * dt;
-
-            this.sprite.setVelocityX(reduced > 0 ? sign * reduced : 0);
-        }
         // --- Jump ---
         if (jumpDown && onGround && !this.isJumping && this.hasCollectedMemory) {
             this.sprite.setVelocityY(jumpForce);
@@ -201,8 +186,8 @@ export default class Player {
             dy /= len;
 
             this.sprite.setVelocity(
-            dx * dashSpeed * dashMultiplier,
-            dy * dashSpeed * dashMultiplier
+            dx * dashSpeed * this.currentDashMultiplier,
+            dy * dashSpeed * this.currentDashMultiplier
         );
 
             // if (this.dashedDown) {
@@ -219,15 +204,21 @@ export default class Player {
 
             this.scene.time.delayedCall(dashDuration, () => {
                 this.isDashing = false;
-                this.sprite.setVelocity(
-                this.sprite.body.velocity.x * this.frictionMultiplier,
-                body.velocity.y
-            );
+                this.sprite.setVelocity(0, 0); // Hard stop
             });
 
             this.scene.time.delayedCall(dashCooldown, () => {
                 this.canDash = true;
             });
+        }
+
+                // --- Grease Effect ---
+        if (this.isOnGrease) {
+            this.frictionMultiplier = 0.2;
+            this.currentDashMultiplier = 1.6; // tweak this
+        } else {
+            this.frictionMultiplier = Phaser.Math.Linear(this.frictionMultiplier, 1, 0.1);
+            this.currentDashMultiplier = dashMultiplier; // reset to config default
         }
 
         // --- Variable Gravity (rise deceleration + fast fall) ---
