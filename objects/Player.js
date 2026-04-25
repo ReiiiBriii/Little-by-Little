@@ -26,6 +26,9 @@ export default class Player {
         this.sprite = scene.physics.add.sprite(x, y, 'player');
         this.sprite.play('idle');
         this.sprite.setCollideWorldBounds(true);
+        // Tighten and lower the hitbox so visual feet rest on tiles.
+        this.sprite.body.setSize(96, 130);
+        this.sprite.body.setOffset(48, 35);
 
         // --- Input ---
         this.keys = scene.input.keyboard.addKeys('W,A,S,D,SPACE,SHIFT');
@@ -154,14 +157,6 @@ export default class Player {
             }
 
             const control = Phaser.Math.Clamp(this.frictionMultiplier * 2, 0.2, 1);
-
-            const newVx = Phaser.Math.Linear(
-                vx,
-                targetVx,
-                (acceleration * control) * dt / walkSpeed
-            );
-
-            this.sprite.setVelocityX(newVx);
         } 
         else {
             const sign = Math.sign(vx);
@@ -256,6 +251,13 @@ export default class Player {
 
         if (!moving && this.isMoving) {
             this.sprite.play('stopRun');
+            this.sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+                if (Math.abs(body.velocity.x) <= 5) {
+                    this.sprite.play('idle');
+                }
+            });
+        } else if (!moving && !this.isMoving && this.sprite.anims.currentAnim?.key !== 'stopRun') {
+            this.sprite.play('idle', true);
         }
 
         this.isMoving = moving;
