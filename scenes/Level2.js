@@ -19,6 +19,7 @@ export default class Level2 extends Phaser.Scene {
             frameWidth: 192,
             frameHeight: 192
         });
+        this.load.audio('gameMusic', 'assets/music/lilbylil-labscene.wav');
     }
 
     create() {
@@ -149,6 +150,25 @@ export default class Level2 extends Phaser.Scene {
             
             // Make the zone visible for debugging
             this.exitZone.setFillStyle(0x00ff00, 0.3);
+        }
+        
+        // Play game music only if not already playing
+        if (!this.sound.get('gameMusic')) {
+            this.gameMusic = this.sound.add('gameMusic');
+            this.gameMusic.play({ 
+                loop: true, 
+                volume: 0.5
+            });
+            
+            // Set up seamless loop
+            this.gameMusic.on('complete', () => {
+                if (this.gameMusic && this.scene.isActive('level2')) {
+                    this.gameMusic.play({ 
+                        loop: true, 
+                        volume: 0.5
+                    });
+                }
+            });
         }
     }
 

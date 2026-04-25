@@ -6,7 +6,7 @@ export default class Spring {
         console.log('Available textures:', scene.textures.getTextureKeys());
         this.sprite = scene.physics.add.sprite(x, y, 'collectibles', 3);
         this.sprite.setImmovable(true);
-        this.sprite.setDepth(1000); // Set very high depth to ensure it's visible
+        this.sprite.setDepth(1); // Set depth behind memory module (1000) but still visible
         this.sprite.setTint(0xffffff); // Ensure sprite is white (no tint)
         this.sprite.setAlpha(1); // Ensure full opacity
         this.sprite.body.setAllowGravity(false); // Disable gravity to prevent falling
@@ -38,6 +38,9 @@ export default class Spring {
     }
 
     collect() {
+        // Play pickup sound
+        this.scene.sound.play('pickupSound', { volume: 0.7 });
+
         // Enable jumping for the player
         if (this.player) {
             this.player.hasCollectedMemory = true;

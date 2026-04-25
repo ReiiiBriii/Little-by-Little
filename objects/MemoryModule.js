@@ -46,7 +46,16 @@ export default class MemoryModule {
     // Save to registry for persistence between levels
     this.scene.registry.set('collectedMemories', this.scene.collectedMemories);
 
+    // Stop background music and play memory pickup music
+    const backgroundMusic = this.scene.sound.get('gameMusic');
+    if (backgroundMusic) {
+        backgroundMusic.pause();
+    }
+
+    this.memoryMusic = this.scene.sound.add('memoryPickupMusic');
+    this.memoryMusic.play({ volume: 0.8 });
+
     this.sprite.destroy();
-    this.scene.showMemoryText(this.data.text);
+    this.scene.showMemoryText(this.data.text, this.memoryMusic, backgroundMusic);
     }
 }

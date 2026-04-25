@@ -147,6 +147,7 @@ export default class Player {
             if (((jumpDown && onGround && !this.isJumping) || (jumpJustDown && this._i)) && this.hasCollectedMemory) {
                 this.sprite.setVelocityY(jumpForce);
                 this.isJumping = true;
+                this.scene.sound.play('jumpSound', { volume: 0.6 });
             }
 
             const control = Phaser.Math.Clamp(this.frictionMultiplier * 2, 0.2, 1);
@@ -167,6 +168,9 @@ export default class Player {
             this.isDashing = true;
             this.canDash = false;
             this.hasDashed = true;
+
+            // Play dash sound
+            this.scene.sound.play('dashSound', { volume: 0.5 });
 
             let dx = 0;
             let dy = 0;

@@ -11,7 +11,32 @@ export default class MainMenu extends Phaser.Scene {
 
     create() {
         this.add.image(400, 300, 'bg');
-        this.sound.play('menuMusic', { loop: true });
+        
+        // Ensure audio context is resumed for browser compatibility
+        if (this.sound.context && this.sound.context.state === 'suspended') {
+            this.sound.context.resume();
+        }
+        
+        this.menuMusic = this.sound.add('menuMusic');
+        
+        // Play menu music with seamless looping
+        this.menuMusic.play({ 
+            loop: true, 
+            volume: 0.5
+        });
+        
+        // Set up seamless loop by restarting immediately when near end
+        this.menuMusic.on('complete', () => {
+            if (this.menuMusic && this.scene.isActive('mainMenu')) {
+                this.menuMusic.play({ 
+                    loop: true, 
+                    volume: 0.5
+                });
+            }
+        });
+        
+        console.log('Menu music playing:', this.menuMusic);
+        
         this.add.text(400, 200, 'MY GAME', {
             fontSize: '48px',
             color: '#ffffff'
@@ -23,6 +48,7 @@ export default class MainMenu extends Phaser.Scene {
         }).setOrigin(0.5);
 
         this.input.keyboard.once('keydown-SPACE', () => {
+            this.sound.stopAll();
             this.scene.start('level1');
         });
     }

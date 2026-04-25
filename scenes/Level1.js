@@ -23,6 +23,11 @@ export default class Level1 extends Phaser.Scene {
             frameWidth: 192,
             frameHeight: 192
         });
+        this.load.audio('gameMusic', 'assets/music/lilbylil-labscene.wav');
+        this.load.audio('pickupSound', 'assets/sfx/mainboipickup.mp3');
+        this.load.audio('dashSound', 'assets/sfx/mainboidash.wav');
+        this.load.audio('jumpSound', 'assets/sfx/mainboijump.mp3');
+        this.load.audio('memoryPickupMusic', 'assets/music/lilbylil-memorymodulepickup.wav');
     }
 
     create() {
@@ -186,13 +191,18 @@ export default class Level1 extends Phaser.Scene {
     } else {
         console.log('No transition point found in map!');
     }
+    
+    // Play game music when level starts, but only if not already playing
+    if (!this.sound.get('gameMusic')) {
+        this.sound.play('gameMusic', { loop: true });
+    }
     }
 
     update(time, delta) {
         this.player.update(time, delta);
     }
 
-    showMemoryText(text) {
+    showMemoryText(text, music = null, backgroundMusic = null) {
         if (this.memoryActive) return;
         this.memoryActive = true;
 
@@ -224,20 +234,20 @@ export default class Level1 extends Phaser.Scene {
         let displayed = '';
         let i = 0;
 
-        this.memoryTimer = this.time.addEvent({
-            delay: 30,
-            repeat: cleanText.length - 1,
-            callback: () => {
-                displayed += cleanText[i];
-                storyText.setText(displayed);
-                i++;
-            }
-        });
+        // Speed up letter display - show letters faster than music duration
+        const textDisplayDuration = music ? Math.max(20, (music.duration * 1000) / cleanText.length * 0.6) : 20;
+        let lettersTyped = 0;
 
-        this.input.keyboard.once('keydown-SPACE', () => {
+        // Set up close function that handles music
+        const closeMemory = () => {
             if (this.memoryTimer) {
                 this.memoryTimer.remove(false);
                 this.memoryTimer = null;
+            }
+
+            // Stop pickup music if still playing
+            if (music && music.isPlaying) {
+                music.stop();
             }
 
             overlay.destroy();
@@ -247,7 +257,42 @@ export default class Level1 extends Phaser.Scene {
             this.player.sprite.setVelocity(0, 0);
 
             this.memoryActive = false;
+
+            // Resume background music
+            if (backgroundMusic) {
+                backgroundMusic.resume();
+            }
+        };
+
+        // Auto-close after text completes + delay, or when music ends
+        const delayedClose = () => {
+            // Wait 2 seconds after text completes before closing
+            this.time.delayedCall(2000, closeMemory);
+        };
+
+        this.memoryTimer = this.time.addEvent({
+            delay: textDisplayDuration,
+            repeat: cleanText.length - 1,
+            callback: () => {
+                displayed += cleanText[i];
+                storyText.setText(displayed);
+                i++;
+                lettersTyped++;
+                
+                // Check if all letters have been typed
+                if (lettersTyped >= cleanText.length) {
+                    delayedClose();
+                }
+            }
         });
+
+        // Auto-close when music ends (if music is provided)
+        if (music) {
+            music.once('complete', closeMemory);
+        }
+
+        // Allow manual close with spacebar
+        this.input.keyboard.once('keydown-SPACE', closeMemory);
     }
 
     transitionToLevel2() {
