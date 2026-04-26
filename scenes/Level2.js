@@ -23,7 +23,7 @@ export default class Level2 extends Phaser.Scene {
         this.load.image('assetTiles', 'assets/backgrounds/LabAssets.png');
         
         // Map
-        this.load.tilemapTiledJSON('map2', '/assets/maps/level2.tmj');
+        this.load.tilemapTiledJSON('map2', 'assets/maps/level2.tmj');
         
         // Sprites
         this.load.spritesheet('player', 'assets/sprites/Player.png', {

@@ -19,7 +19,7 @@ export default class Level3 extends Phaser.Scene {
         this.load.image('background', 'assets/backgrounds/OutsideLandscape.png');
         
         // Map
-        this.load.tilemapTiledJSON('map3', '/assets/maps/level3.tmj');
+        this.load.tilemapTiledJSON('map3', 'assets/maps/level3.tmj');
         
         // Sprites
         this.load.spritesheet('player', 'assets/sprites/Player.png', {

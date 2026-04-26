@@ -15,7 +15,7 @@ export default class Level1 extends Phaser.Scene {
         this.load.image('groundTiles', 'assets/tiles/Ground1.png');
         this.load.image('wallTiles', 'assets/backgrounds/LabWall.png');
         this.load.image('assetTiles', 'assets/backgrounds/LabAssets.png');
-        this.load.tilemapTiledJSON('map', '/assets/maps/level1.tmj');
+        this.load.tilemapTiledJSON('map', 'assets/maps/level1.tmj');
         this.load.spritesheet('player', 'assets/sprites/Player.png', {
             frameWidth: 192,
             frameHeight: 192
