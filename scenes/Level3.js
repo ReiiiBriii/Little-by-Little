@@ -4,6 +4,7 @@ import GreasePath from '../objects/GreasePath.js';
 import MemoryModule from '../objects/MemoryModule.js';
 import memoryData from '../data/memoryData.js';
 import DashUpgrade from '../objects/DashUpgrade.js';
+import HUD from '../objects/HUD.js';
 
 export default class Level3 extends Phaser.Scene {
     constructor() {
@@ -245,6 +246,28 @@ export default class Level3 extends Phaser.Scene {
         });
         
         console.log('Audio setup complete - Music:', musicVolume, 'General:', generalVolume, 'SFX:', sfxVolume);
+
+        // --- HUD ---
+        this.hud = new HUD(this);
+
+        // --- ESC → Pause Menu ---
+        this.isPaused = false;
+        this.setupPauseKey();
+    }
+
+    setupPauseKey() {
+        this.input.keyboard.on('keydown-ESC', () => {
+            if (this.memoryActive || this.isPaused) return;
+            this.isPaused = true;
+            this.scene.pause();
+            this.scene.launch('pauseMenu', { previousScene: 'level3' });
+            this.scene.bringToTop('pauseMenu');
+        });
+
+        // Re-enable when scene is resumed
+        this.events.on('resume', () => {
+            this.isPaused = false;
+        });
     }
 
     update(time, delta) {

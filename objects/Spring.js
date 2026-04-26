@@ -49,6 +49,11 @@ export default class Spring {
         // Save spring collection status to registry for persistence across levels
         this.scene.registry.set('springCollected', true);
 
+        // Update HUD if it exists
+        if (this.scene.hud) {
+            this.scene.hud.popIcon('springCollected');
+        }
+
         this.sprite.destroy();
         this.showSpringGuide();
     }
