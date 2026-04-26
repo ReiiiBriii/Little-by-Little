@@ -52,6 +52,11 @@ export default class MemoryModule {
         backgroundMusic.pause();
     }
 
+    // Play pickup sound with proper volume control
+    if (this.scene.playSFX) {
+        this.scene.playSFX('pickupSound');
+    }
+    
     this.memoryMusic = this.scene.sound.add('memoryPickupMusic');
     this.memoryMusic.play({ volume: 0.8 });
 

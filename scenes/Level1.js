@@ -199,19 +199,87 @@ export default class Level1 extends Phaser.Scene {
         // Read volume settings from Options / MainMenu registry
         const musicVolume = this.registry.get('musicVolume') ?? 0.5;
         const generalVolume = this.registry.get('generalVolume') ?? 0.5;
+        const sfxVolume = this.registry.get('sfxVolume') ?? 0.7;
+        const ambienceVolume = this.registry.get('ambienceVolume') ?? 0.6;
+        
+        // Set general volume for all sounds
         this.sound.volume = generalVolume;
 
-        // Play game music (looping)
+        // Play game music (looping) with music volume
         this.gameMusic = this.sound.add('gameMusic', { loop: true, volume: musicVolume });
         this.gameMusic.play();
 
-        // Play ambience (looping) — slightly quieter than music
-        this.ambience = this.sound.add('ambience', { loop: true, volume: musicVolume * 0.6 });
+        // Play ambience (looping) with separate ambience volume
+        this.ambience = this.sound.add('ambience', { loop: true, volume: ambienceVolume });
         this.ambience.play();
+        
+        // Store volume references for dynamic updates
+        this.currentVolumes = {
+            music: musicVolume,
+            general: generalVolume,
+            sfx: sfxVolume,
+            ambience: ambienceVolume
+        };
+        
+        // Listen for volume changes from Options menu
+        this.registry.events.on('changedata-musicVolume', () => {
+            this.updateVolumes();
+        });
+        this.registry.events.on('changedata-generalVolume', () => {
+            this.updateVolumes();
+        });
+        this.registry.events.on('changedata-sfxVolume', () => {
+            this.updateVolumes();
+        });
+        this.registry.events.on('changedata-ambienceVolume', () => {
+            this.updateVolumes();
+        });
+        
+        console.log('Audio setup complete - Music:', musicVolume, 'General:', generalVolume, 'SFX:', sfxVolume, 'Ambience:', ambienceVolume);
     }
 
     update(time, delta) {
         this.player.update(time, delta);
+    }
+
+    // Play SFX with proper volume control
+    playSFX(soundKey) {
+        const sfxVolume = this.registry.get('sfxVolume') ?? 0.7;
+        const generalVolume = this.registry.get('generalVolume') ?? 0.5;
+        const finalVolume = sfxVolume * generalVolume;
+        
+        return this.sound.play(soundKey, { volume: finalVolume });
+    }
+
+    // Update all audio volumes dynamically
+    updateVolumes() {
+        const musicVolume = this.registry.get('musicVolume') ?? 0.5;
+        const generalVolume = this.registry.get('generalVolume') ?? 0.5;
+        const sfxVolume = this.registry.get('sfxVolume') ?? 0.7;
+        const ambienceVolume = this.registry.get('ambienceVolume') ?? 0.6;
+        
+        // Update global volume
+        this.sound.volume = generalVolume;
+        
+        // Update music volume
+        if (this.gameMusic) {
+            this.gameMusic.setVolume(musicVolume);
+        }
+        
+        // Update ambience volume (separate from music volume)
+        if (this.ambience) {
+            this.ambience.setVolume(ambienceVolume);
+        }
+        
+        // Store updated volumes
+        this.currentVolumes = {
+            music: musicVolume,
+            general: generalVolume,
+            sfx: sfxVolume,
+            ambience: ambienceVolume
+        };
+        
+        console.log('Volumes updated - Music:', musicVolume, 'General:', generalVolume, 'SFX:', sfxVolume, 'Ambience:', ambienceVolume);
     }
 
     showMemoryText(text, music = null, backgroundMusic = null) {
@@ -351,10 +419,9 @@ export default class Level1 extends Phaser.Scene {
         this.isPaused = true;
         this.physics.pause();
         this.player.sprite.setVelocity(0, 0);
-        this.player.sprite.setVelocity(0, 0);
 
         // Add overlay
-        const overlay = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.8)
+        const pauseOverlay = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.8)
             .setOrigin(0)
             .setScrollFactor(0)
             .setDepth(1000);
@@ -375,29 +442,34 @@ export default class Level1 extends Phaser.Scene {
         const musicVolume = this.registry.get('musicVolume') || 0.5;
         const generalVolume = this.registry.get('generalVolume') || 0.5;
         const sfxVolume = this.registry.get('sfxVolume') || 0.7;
+        const ambienceVolume = this.registry.get('ambienceVolume') || 0.6;
 
         // Create volume sliders
-        this.createPauseVolumeSlider(this.scale.width / 2 - 150, this.scale.height / 2 - 50, 'Music Volume', musicVolume, (value) => {
+        this.createPauseVolumeSlider(this.scale.width / 2 - 150, this.scale.height / 2 - 80, 'Music Volume', musicVolume, (value) => {
             this.registry.set('musicVolume', value);
             if (this.sound.get('gameMusic')) {
                 this.sound.get('gameMusic').setVolume(value);
             }
+        });
+
+        this.createPauseVolumeSlider(this.scale.width / 2 - 150, this.scale.height / 2 - 20, 'Ambience Volume', ambienceVolume, (value) => {
+            this.registry.set('ambienceVolume', value);
             if (this.sound.get('ambience')) {
-                this.sound.get('ambience').setVolume(value * 0.6);
+                this.sound.get('ambience').setVolume(value);
             }
         });
 
-        this.createPauseVolumeSlider(this.scale.width / 2 - 150, this.scale.height / 2 + 50, 'General Volume', generalVolume, (value) => {
+        this.createPauseVolumeSlider(this.scale.width / 2 - 150, this.scale.height / 2 + 40, 'General Volume', generalVolume, (value) => {
             this.registry.set('generalVolume', value);
             this.sound.volume = value;
         });
 
-        this.createPauseVolumeSlider(this.scale.width / 2 - 150, this.scale.height / 2 + 150, 'SFX Volume', sfxVolume, (value) => {
+        this.createPauseVolumeSlider(this.scale.width / 2 - 150, this.scale.height / 2 + 100, 'SFX Volume', sfxVolume, (value) => {
             this.registry.set('sfxVolume', value);
         });
 
         // Resume button
-        const resumeButton = this.add.text(this.scale.width / 2, this.scale.height / 2 + 230, 'RESUME', {
+        const resumeButton = this.add.text(this.scale.width / 2, this.scale.height / 2 + 180, 'RESUME', {
             fontSize: '32px',
             color: '#00ff00',
             backgroundColor: '#333333',
@@ -409,7 +481,7 @@ export default class Level1 extends Phaser.Scene {
         });
 
         // Back to menu button
-        const menuButton = this.add.text(this.scale.width / 2, this.scale.height / 2 + 280, 'BACK TO MENU', {
+        const menuButton = this.add.text(this.scale.width / 2, this.scale.height / 2 + 230, 'BACK TO MENU', {
             fontSize: '24px',
             color: '#ffffff',
             backgroundColor: '#8b0000',
@@ -422,7 +494,7 @@ export default class Level1 extends Phaser.Scene {
         });
 
         // Store pause menu elements
-        this.pauseMenuElements = { overlay, panel, title, resumeButton, menuButton };
+        this.pauseMenuElements = { pauseOverlay, panel, title, resumeButton, menuButton };
 
         // ESC to resume
         this.input.keyboard.once('keydown-ESC', () => {
@@ -486,7 +558,6 @@ export default class Level1 extends Phaser.Scene {
 
     hidePauseMenu() {
         if (!this.isPaused) return;
-
         this.isPaused = false;
         this.physics.resume();
 

@@ -150,7 +150,9 @@ export default class Player {
             if (((jumpDown && onGround && !this.isJumping) || (jumpJustDown && this._i)) && this.hasCollectedMemory) {
                 this.sprite.setVelocityY(jumpForce);
                 this.isJumping = true;
-                this.scene.sound.play('jumpSound', { volume: 0.6 });
+                if (this.scene.playSFX) {
+                    this.scene.playSFX('jumpSound');
+                }
             }
 
         }
@@ -167,7 +169,9 @@ export default class Player {
             this.hasDashed = true;
 
             // Play dash sound
-            this.scene.sound.play('dashSound', { volume: 0.5 });
+            if (this.scene.playSFX) {
+                this.scene.playSFX('dashSound');
+            }
 
             let dx = 0;
             let dy = 0;

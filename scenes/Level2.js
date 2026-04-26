@@ -10,17 +10,36 @@ export default class Level2 extends Phaser.Scene {
     }
 
     preload() {
+        // Tilesets (as defined in tmj file)
+        this.load.image('Steel Beams', 'assets/tiles/Steel Beams.png');
         this.load.image('HallwayGround', 'assets/tiles/Hallway tileset.png');
+        this.load.image('Hallway BG', 'assets/backgrounds/Hallway BG.png');
+        this.load.image('HallwayAssets', 'assets/backgrounds/HallwayAssets.png');
+        
+        // Additional backgrounds if needed
         this.load.image('wallTiles', 'assets/backgrounds/LabWall.png');
         this.load.image('assetTiles', 'assets/backgrounds/LabAssets.png');
-        this.load.image('steelBeams', 'assets/tiles/Steel Beams.png');
+        
+        // Map
         this.load.tilemapTiledJSON('map2', '/assets/maps/level2.tmj');
+        
+        // Sprites
         this.load.spritesheet('player', 'assets/sprites/Player.png', {
             frameWidth: 192,
             frameHeight: 192
         });
+        this.load.spritesheet('collectibles', 'assets/collectibles/Chapter1Items.png', {
+            frameWidth: 192,
+            frameHeight: 192
+        });
+        
+        // Audio
         this.load.audio('gameMusic', 'assets/music/lilbylil-labscene.wav');
         this.load.audio('ambience', 'assets/music/lilbylil-labscene-ambience.wav');
+        this.load.audio('pickupSound', 'assets/sfx/mainboipickup.mp3');
+        this.load.audio('dashSound', 'assets/sfx/mainboidash.wav');
+        this.load.audio('jumpSound', 'assets/sfx/mainboijump.mp3');
+        this.load.audio('memoryPickupMusic', 'assets/music/lilbylil-memorymodulepickup.wav');
     }
 
     create() {
@@ -66,34 +85,108 @@ export default class Level2 extends Phaser.Scene {
 
         // Map  
         const map = this.make.tilemap({ key: 'map2' });
+        
+        // Load tilesets with error handling
         const groundTiles = map.addTilesetImage('HallwayGround', 'HallwayGround');
-        const steelBeams = map.addTilesetImage('Steel Beams', 'steelBeams');
+        const steelBeams = map.addTilesetImage('Steel Beams', 'Steel Beams');
+        const hallwayBG = map.addTilesetImage('Hallway BG', 'Hallway BG');
+        
+        // Try loading HallwayAssets with explicit error handling
+        let hallwayAssets = null;
+        try {
+            hallwayAssets = map.addTilesetImage('HallwayAssets', 'HallwayAssets');
+            console.log('HallwayAssets loaded successfully');
+        } catch (error) {
+            console.error('Failed to load HallwayAssets tileset:', error);
+        }
         
         console.log('Tilesets loaded:', {
             groundTiles: !!groundTiles,
-            steelBeams: !!steelBeams
+            steelBeams: !!steelBeams,
+            hallwayBG: !!hallwayBG,
+            hallwayAssets: !!hallwayAssets,
+            mapWidth: map.width,
+            mapHeight: map.height
         });
         
-        const allTilesets = [groundTiles, steelBeams];
+        // Debug: Check if HallwayAssets image is loaded correctly
+        if (hallwayAssets) {
+            console.log('HallwayAssets tileset details:', {
+                name: hallwayAssets.name,
+                image: hallwayAssets.image,
+                firstGid: hallwayAssets.firstgid,
+                tileCount: hallwayAssets.tilecount,
+                columns: hallwayAssets.columns,
+                rows: hallwayAssets.rows
+            });
+        }
+        
+        // Build tilesets array, excluding null ones
+        const allTilesets = [groundTiles, steelBeams, hallwayBG];
+        if (hallwayAssets) {
+            allTilesets.push(hallwayAssets);
+        }
 
-        const layer1 = map.createLayer('Tile Layer 1', allTilesets, 0, 0);
-        layer1.setCollisionByExclusion([-1], true);
+        // Visual test: Add HallwayAssets image directly to verify it loads
+        if (this.textures.exists('HallwayAssets')) {
+            const testImage = this.add.image(100, 100, 'HallwayAssets')
+                .setOrigin(0)
+                .setDepth(9999)
+                .setScale(0.1);
+            console.log('HallwayAssets image test created');
+        } else {
+            console.warn('HallwayAssets texture not found');
+        }
+
+        // Create all layers as defined in tmj file
+        let backgroundLayer, backgroundLayer2, backgroundLayer3, layer1, layer2;
         
-        // Layers
-        const layer2 = map.createLayer('Tile Layer 2', allTilesets, 0, 0);
+        try {
+            backgroundLayer = map.createLayer('Background', allTilesets, 0, 0);
+            backgroundLayer2 = map.createLayer('Background 2', allTilesets, 0, 0);
+            backgroundLayer3 = map.createLayer('Background 3', allTilesets, 0, 0);
+            layer1 = map.createLayer('Tile Layer 1', allTilesets, 0, 0);
+            layer2 = map.createLayer('Tile Layer 2', allTilesets, 0, 0);
+            
+            console.log('All 5 layers created successfully');
+        } catch (error) {
+            console.error('Error creating layers:', error);
+        }
         
-        // Set collision for steel beams on both layers
-        layer1.setCollision([17, 18, 19, 20]);
-        layer2.setCollision([17, 18, 19, 20]);
+        // Set collision for main gameplay layer
+        if (layer1) {
+            layer1.setCollisionByExclusion([-1], true);
+            map.setCollisionByProperty({ collides: true }, true, true, layer1);
+        }
         
-        // Also try setting collision by property for steel beams
-        map.setCollisionByProperty({ collides: true }, true, true, layer1);
-        map.setCollisionByProperty({ collides: true }, true, true, layer2);
+        if (layer2) {
+            map.setCollisionByProperty({ collides: true }, true, true, layer2);
+        }
         
-        // Debug: Check if steel beams are actually in the layers
-        const steelBeamCount1 = layer1.filterTiles(tile => tile.index >= 17 && tile.index <= 20).length;
-        const steelBeamCount2 = layer2.filterTiles(tile => tile.index >= 17 && tile.index <= 20).length;
-        console.log('Steel beams found - Layer1:', steelBeamCount1, 'Layer2:', steelBeamCount2);
+        // Debug: Check tile counts and tile indices with tileset mapping
+        const debugTiles = (layer, name) => {
+            if (!layer) return;
+            const tiles = layer.filterTiles(tile => tile.index !== -1);
+            const uniqueIndices = [...new Set(tiles.map(tile => tile.index))];
+            
+            // Map tile indices to tilesets
+            const tilesetMapping = uniqueIndices.map(index => {
+                let tilesetName = 'Unknown';
+                if (index >= 1 && index <= 4) tilesetName = 'Steel Beams';
+                else if (index >= 5 && index <= 20) tilesetName = 'HallwayGround';
+                else if (index >= 21 && index <= 55) tilesetName = 'Hallway BG';
+                else if (index >= 56) tilesetName = 'HallwayAssets';
+                return `${index}(${tilesetName})`;
+            });
+            
+            console.log(`${name} - Total tiles: ${tiles.length}, Unique indices: ${tilesetMapping.slice(0, 15).join(', ')}${tilesetMapping.length > 15 ? '...' : ''}`);
+        };
+        
+        debugTiles(backgroundLayer, 'Background');
+        debugTiles(backgroundLayer2, 'Background 2');
+        debugTiles(backgroundLayer3, 'Background 3');
+        debugTiles(layer1, 'Tile Layer 1');
+        debugTiles(layer2, 'Tile Layer 2');
         
         const mapWidth = map.width * map.tileWidth;
         const mapHeight = map.height * map.tileHeight;
@@ -126,6 +219,10 @@ export default class Level2 extends Phaser.Scene {
         
         this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
         this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
+
+        // Initialize collected memories set from registry or create new
+        this.collectedMemories = this.registry.get('collectedMemories') || new Set();
+        this.memoryActive = false;
 
         // Level transition zone back to Level1
         const transitionPoint = objectLayer?.objects?.find(obj => obj.name === 'transition');
@@ -160,19 +257,87 @@ export default class Level2 extends Phaser.Scene {
         // Read volume settings from Options / MainMenu registry
         const musicVolume = this.registry.get('musicVolume') ?? 0.5;
         const generalVolume = this.registry.get('generalVolume') ?? 0.5;
+        const sfxVolume = this.registry.get('sfxVolume') ?? 0.7;
+        const ambienceVolume = this.registry.get('ambienceVolume') ?? 0.6;
+        
+        // Set general volume for all sounds
         this.sound.volume = generalVolume;
 
-        // Play game music (looping)
+        // Play game music (looping) with music volume
         this.gameMusic = this.sound.add('gameMusic', { loop: true, volume: musicVolume });
         this.gameMusic.play();
 
-        // Play ambience (looping) — slightly quieter than music
-        this.ambience = this.sound.add('ambience', { loop: true, volume: musicVolume * 0.6 });
+        // Play ambience (looping) with separate ambience volume
+        this.ambience = this.sound.add('ambience', { loop: true, volume: ambienceVolume });
         this.ambience.play();
+        
+        // Store volume references for dynamic updates
+        this.currentVolumes = {
+            music: musicVolume,
+            general: generalVolume,
+            sfx: sfxVolume,
+            ambience: ambienceVolume
+        };
+        
+        // Listen for volume changes from Options menu
+        this.registry.events.on('changedata-musicVolume', () => {
+            this.updateVolumes();
+        });
+        this.registry.events.on('changedata-generalVolume', () => {
+            this.updateVolumes();
+        });
+        this.registry.events.on('changedata-sfxVolume', () => {
+            this.updateVolumes();
+        });
+        this.registry.events.on('changedata-ambienceVolume', () => {
+            this.updateVolumes();
+        });
+        
+        console.log('Audio setup complete - Music:', musicVolume, 'General:', generalVolume, 'SFX:', sfxVolume);
     }
 
     update(time, delta) {
         this.player.update(time, delta);
+    }
+
+    // Play SFX with proper volume control
+    playSFX(soundKey) {
+        const sfxVolume = this.registry.get('sfxVolume') ?? 0.7;
+        const generalVolume = this.registry.get('generalVolume') ?? 0.5;
+        const finalVolume = sfxVolume * generalVolume;
+        
+        return this.sound.play(soundKey, { volume: finalVolume });
+    }
+
+    // Update all audio volumes dynamically
+    updateVolumes() {
+        const musicVolume = this.registry.get('musicVolume') ?? 0.5;
+        const generalVolume = this.registry.get('generalVolume') ?? 0.5;
+        const sfxVolume = this.registry.get('sfxVolume') ?? 0.7;
+        const ambienceVolume = this.registry.get('ambienceVolume') ?? 0.6;
+        
+        // Update global volume
+        this.sound.volume = generalVolume;
+        
+        // Update music volume
+        if (this.gameMusic) {
+            this.gameMusic.setVolume(musicVolume);
+        }
+        
+        // Update ambience volume (separate from music volume)
+        if (this.ambience) {
+            this.ambience.setVolume(ambienceVolume);
+        }
+        
+        // Store updated volumes
+        this.currentVolumes = {
+            music: musicVolume,
+            general: generalVolume,
+            sfx: sfxVolume,
+            ambience: ambienceVolume
+        };
+        
+        console.log('Volumes updated - Music:', musicVolume, 'General:', generalVolume, 'SFX:', sfxVolume, 'Ambience:', ambienceVolume);
     }
 
     showMemoryText(text, music = null, backgroundMusic = null) {
@@ -302,7 +467,9 @@ export default class Level2 extends Phaser.Scene {
     transitionToLevel1() {
         this.cameras.main.fadeOut(200, 0, 0, 0);
         this.cameras.main.once('camerafadeoutcomplete', () => {
-            // Stop music & ambience before switching scenes
+            // Stop all audio before switching scenes
+            if (this.gameMusic) this.gameMusic.stop();
+            if (this.ambience) this.ambience.stop();
             this.sound.stopAll();
             this.registry.set('comingFromLevel2', true);
             this.scene.start('level1');
