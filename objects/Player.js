@@ -48,6 +48,7 @@ export default class Player {
         this.isOnGrease = false;
         this.wasPadJumpDown = false;
         this.hasCollectedMemory = false;
+        this.hasDashUpgrade = false;
 
         this._u = false;
         this._s = false;
@@ -163,7 +164,7 @@ export default class Player {
         }
 
         // --- Dash ---
-        if (dashJustDown && !this.isDashing && (this._u || (this.canDash && !this.hasDashed))) {
+        if (dashJustDown && !this.isDashing && (this._u || (this.hasDashUpgrade && this.canDash && !this.hasDashed))) {
             this.isDashing = true;
             this.canDash = false;
             this.hasDashed = true;

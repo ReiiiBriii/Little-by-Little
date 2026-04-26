@@ -228,6 +228,14 @@ export default class Level2 extends Phaser.Scene {
             console.log('Spring created in Level2 at:', springX, springY);
         }
         
+        // Check if dash upgrade has been collected
+        const dashUpgradeCollected = this.registry.get('dashUpgradeCollected') || false;
+        if (dashUpgradeCollected) {
+            // Enable dash for player if upgrade was already collected
+            this.player.hasDashUpgrade = true;
+            console.log('Dash upgrade already collected, dash enabled');
+        }
+        
         // Add colliders for both layers AFTER player is created
         this.physics.add.collider(this.player.sprite, layer1);
         this.physics.add.collider(this.player.sprite, layer2);

@@ -134,6 +134,14 @@ export default class Level1 extends Phaser.Scene {
             console.log('Spring already collected, jumping enabled');
         }
 
+        // Check if dash upgrade has been collected
+        const dashUpgradeCollected = this.registry.get('dashUpgradeCollected') || false;
+        if (dashUpgradeCollected) {
+            // Enable dash for player if upgrade was already collected
+            this.player.hasDashUpgrade = true;
+            console.log('Dash upgrade already collected, dash enabled');
+        }
+
         // Create memory module at fixed map position only if not already collected
         const memoryModuleX = 2500; // Fixed X position on map
         const memoryModuleY = 2000; // Fixed Y position on map

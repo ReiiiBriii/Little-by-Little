@@ -3,6 +3,7 @@ import Player from '../objects/Player.js';
 import GreasePath from '../objects/GreasePath.js';
 import MemoryModule from '../objects/MemoryModule.js';
 import memoryData from '../data/memoryData.js';
+import DashUpgrade from '../objects/DashUpgrade.js';
 
 export default class Level3 extends Phaser.Scene {
     constructor() {
@@ -129,6 +130,23 @@ export default class Level3 extends Phaser.Scene {
             // Enable jumping for player if spring was collected in Level1
             this.player.hasCollectedMemory = true;
             console.log('Spring already collected in Level1, jumping enabled in Level3');
+        }
+        
+        // Check if dash upgrade has been collected
+        const dashUpgradeCollected = this.registry.get('dashUpgradeCollected') || false;
+        if (dashUpgradeCollected) {
+            // Enable dash for player if upgrade was already collected
+            this.player.hasDashUpgrade = true;
+            console.log('Dash upgrade already collected, dash enabled');
+        } else {
+            // Spawn dash upgrade in Level3
+            const dashUpgradeX = 7235;
+            const dashUpgradeY = 500;
+
+            const dashUpgrade = new DashUpgrade(this, dashUpgradeX, dashUpgradeY);
+            dashUpgrade.setupOverlap(this.player);
+
+            console.log('Dash upgrade created in Level3 at:', dashUpgradeX, dashUpgradeY);
         }
         
         // Add colliders for layer AFTER player is created
