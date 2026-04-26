@@ -20,6 +20,7 @@ export default class Level2 extends Phaser.Scene {
             frameHeight: 192
         });
         this.load.audio('gameMusic', 'assets/music/lilbylil-labscene.wav');
+        this.load.audio('ambience', 'assets/music/lilbylil-labscene-ambience.wav');
     }
 
     create() {
@@ -152,25 +153,22 @@ export default class Level2 extends Phaser.Scene {
             this.exitZone.setFillStyle(0x00ff00, 0.3);
         }
         
-                
-        // Play game music only if not already playing
-        if (!this.sound.get('gameMusic')) {
-            this.gameMusic = this.sound.add('gameMusic');
-            this.gameMusic.play({ 
-                loop: true, 
-                volume: 0.5
-            });
-            
-            // Set up seamless loop
-            this.gameMusic.on('complete', () => {
-                if (this.gameMusic && this.scene.isActive('level2')) {
-                    this.gameMusic.play({ 
-                        loop: true, 
-                        volume: 0.5
-                    });
-                }
-            });
-        }
+
+        // Stop any leftover sounds from previous scene
+        this.sound.stopAll();
+
+        // Read volume settings from Options / MainMenu registry
+        const musicVolume = this.registry.get('musicVolume') ?? 0.5;
+        const generalVolume = this.registry.get('generalVolume') ?? 0.5;
+        this.sound.volume = generalVolume;
+
+        // Play game music (looping)
+        this.gameMusic = this.sound.add('gameMusic', { loop: true, volume: musicVolume });
+        this.gameMusic.play();
+
+        // Play ambience (looping) — slightly quieter than music
+        this.ambience = this.sound.add('ambience', { loop: true, volume: musicVolume * 0.6 });
+        this.ambience.play();
     }
 
     update(time, delta) {
@@ -304,6 +302,8 @@ export default class Level2 extends Phaser.Scene {
     transitionToLevel1() {
         this.cameras.main.fadeOut(200, 0, 0, 0);
         this.cameras.main.once('camerafadeoutcomplete', () => {
+            // Stop music & ambience before switching scenes
+            this.sound.stopAll();
             this.registry.set('comingFromLevel2', true);
             this.scene.start('level1');
         });

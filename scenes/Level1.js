@@ -24,6 +24,7 @@ export default class Level1 extends Phaser.Scene {
             frameHeight: 192
         });
         this.load.audio('gameMusic', 'assets/music/lilbylil-labscene.wav');
+        this.load.audio('ambience', 'assets/music/lilbylil-labscene-ambience.wav');
         this.load.audio('pickupSound', 'assets/sfx/mainboipickup.mp3');
         this.load.audio('dashSound', 'assets/sfx/mainboidash.wav');
         this.load.audio('jumpSound', 'assets/sfx/mainboijump.mp3');
@@ -192,10 +193,21 @@ export default class Level1 extends Phaser.Scene {
             console.log('No transition point found in map!');
         }
 
-        // Play game music when level starts, but only if not already playing
-        if (!this.sound.get('gameMusic')) {
-            this.sound.play('gameMusic', { loop: true });
-        }
+        // Stop any leftover sounds from previous scene
+        this.sound.stopAll();
+
+        // Read volume settings from Options / MainMenu registry
+        const musicVolume = this.registry.get('musicVolume') ?? 0.5;
+        const generalVolume = this.registry.get('generalVolume') ?? 0.5;
+        this.sound.volume = generalVolume;
+
+        // Play game music (looping)
+        this.gameMusic = this.sound.add('gameMusic', { loop: true, volume: musicVolume });
+        this.gameMusic.play();
+
+        // Play ambience (looping) — slightly quieter than music
+        this.ambience = this.sound.add('ambience', { loop: true, volume: musicVolume * 0.6 });
+        this.ambience.play();
     }
 
     update(time, delta) {
@@ -335,178 +347,183 @@ export default class Level1 extends Phaser.Scene {
 
     showPauseMenu() {
         if (this.isPaused) return;
-        
+
         this.isPaused = true;
         this.physics.pause();
         this.player.sprite.setVelocity(0, 0);
-    this.player.sprite.setVelocity(0, 0);
+        this.player.sprite.setVelocity(0, 0);
 
-    // Add overlay
-    const overlay = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.8)
-        .setOrigin(0)
-        .setScrollFactor(0)
-        .setDepth(1000);
+        // Add overlay
+        const overlay = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.8)
+            .setOrigin(0)
+            .setScrollFactor(0)
+            .setDepth(1000);
 
-    // Add pause panel
-    const panel = this.add.rectangle(this.scale.width / 2, this.scale.height / 2, 600, 500, 0x222222, 0.95)
-        .setOrigin(0.5)
-        .setScrollFactor(0)
-        .setDepth(1001);
+        // Add pause panel
+        const panel = this.add.rectangle(this.scale.width / 2, this.scale.height / 2, 600, 500, 0x222222, 0.95)
+            .setOrigin(0.5)
+            .setScrollFactor(0)
+            .setDepth(1001);
 
-    // Title
-    const title = this.add.text(this.scale.width / 2, this.scale.height / 2 - 200, 'PAUSED', {
-        fontSize: '48px',
-        color: '#ffffff'
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(1002);
+        // Title
+        const title = this.add.text(this.scale.width / 2, this.scale.height / 2 - 200, 'PAUSED', {
+            fontSize: '48px',
+            color: '#ffffff'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(1002);
 
-    // Volume settings from registry
-    const musicVolume = this.registry.get('musicVolume') || 0.5;
-    const generalVolume = this.registry.get('generalVolume') || 0.5;
-    const sfxVolume = this.registry.get('sfxVolume') || 0.7;
+        // Volume settings from registry
+        const musicVolume = this.registry.get('musicVolume') || 0.5;
+        const generalVolume = this.registry.get('generalVolume') || 0.5;
+        const sfxVolume = this.registry.get('sfxVolume') || 0.7;
 
-    // Create volume sliders
-    this.createPauseVolumeSlider(this.scale.width / 2 - 150, this.scale.height / 2 - 50, 'Music Volume', musicVolume, (value) => {
-        this.registry.set('musicVolume', value);
-        if (this.sound.get('gameMusic')) {
-            this.sound.get('gameMusic').setVolume(value);
-        }
-    });
-
-    this.createPauseVolumeSlider(this.scale.width / 2 - 150, this.scale.height / 2 + 50, 'General Volume', generalVolume, (value) => {
-        this.registry.set('generalVolume', value);
-        this.sound.volume = value;
-    });
-
-    this.createPauseVolumeSlider(this.scale.width / 2 - 150, this.scale.height / 2 + 150, 'SFX Volume', sfxVolume, (value) => {
-        this.registry.set('sfxVolume', value);
-    });
-
-    // Resume button
-    const resumeButton = this.add.text(this.scale.width / 2, this.scale.height / 2 + 230, 'RESUME', {
-        fontSize: '32px',
-        color: '#00ff00',
-        backgroundColor: '#333333',
-        padding: { x: 20, y: 10 }
-    }).setOrigin(0.5).setInteractive().setScrollFactor(0).setDepth(1002);
-
-    resumeButton.on('pointerdown', () => {
-        this.hidePauseMenu();
-    });
-
-    // Back to menu button
-    const menuButton = this.add.text(this.scale.width / 2, this.scale.height / 2 + 280, 'BACK TO MENU', {
-        fontSize: '24px',
-        color: '#ffffff',
-        backgroundColor: '#8b0000',
-        padding: { x: 20, y: 10 }
-    }).setOrigin(0.5).setInteractive().setScrollFactor(0).setDepth(1002);
-
-    menuButton.on('pointerdown', () => {
-        this.sound.stopAll();
-        this.scene.start('mainMenu');
-    });
-
-    // Store pause menu elements
-    this.pauseMenuElements = { overlay, panel, title, resumeButton, menuButton };
-
-    // ESC to resume
-    this.input.keyboard.once('keydown-ESC', () => {
-        this.hidePauseMenu();
-    });
-}
-
-createPauseVolumeSlider(x, y, label, initialValue, onChange) {
-    // Label
-    this.add.text(x, y - 30, label, {
-        fontSize: '20px',
-        color: '#ffffff'
-    }).setScrollFactor(0).setDepth(1002);
-
-    // Slider track
-    const track = this.add.rectangle(x, y, 300, 8, 0x666666)
-        .setOrigin(0, 0.5)
-        .setScrollFactor(0)
-        .setDepth(1002);
-
-    // Slider handle
-    const handle = this.add.circle(x + (initialValue * 300), y, 12, 0xffffff)
-        .setInteractive()
-        .setScrollFactor(0)
-        .setDepth(1003);
-
-    // Volume value text
-    const valueText = this.add.text(x + 320, y, `${Math.round(initialValue * 100)}%`, {
-        fontSize: '16px',
-        color: '#ffffff'
-    }).setScrollFactor(0).setDepth(1002);
-
-    // Handle dragging
-    let isDragging = false;
-
-    handle.on('pointerdown', () => {
-        isDragging = true;
-    });
-
-    this.input.on('pointermove', (pointer) => {
-        if (isDragging) {
-            const newX = Phaser.Math.Clamp(pointer.x, x, x + 300);
-            handle.x = newX;
-            
-            const value = (newX - x) / 300;
-            valueText.setText(`${Math.round(value * 100)}%`);
-            onChange(value);
-        }
-    });
-
-    this.input.on('pointerup', () => {
-        isDragging = false;
-    });
-
-    // Store slider elements for cleanup
-    if (!this.pauseMenuSliders) {
-        this.pauseMenuSliders = [];
-    }
-    this.pauseMenuSliders.push({ track, handle, valueText });
-}
-
-hidePauseMenu() {
-    if (!this.isPaused) return;
-
-    this.isPaused = false;
-    this.physics.resume();
-
-    // Destroy pause menu elements
-    if (this.pauseMenuElements) {
-        Object.values(this.pauseMenuElements).forEach(element => {
-            if (element) element.destroy();
+        // Create volume sliders
+        this.createPauseVolumeSlider(this.scale.width / 2 - 150, this.scale.height / 2 - 50, 'Music Volume', musicVolume, (value) => {
+            this.registry.set('musicVolume', value);
+            if (this.sound.get('gameMusic')) {
+                this.sound.get('gameMusic').setVolume(value);
+            }
+            if (this.sound.get('ambience')) {
+                this.sound.get('ambience').setVolume(value * 0.6);
+            }
         });
-        this.pauseMenuElements = null;
+
+        this.createPauseVolumeSlider(this.scale.width / 2 - 150, this.scale.height / 2 + 50, 'General Volume', generalVolume, (value) => {
+            this.registry.set('generalVolume', value);
+            this.sound.volume = value;
+        });
+
+        this.createPauseVolumeSlider(this.scale.width / 2 - 150, this.scale.height / 2 + 150, 'SFX Volume', sfxVolume, (value) => {
+            this.registry.set('sfxVolume', value);
+        });
+
+        // Resume button
+        const resumeButton = this.add.text(this.scale.width / 2, this.scale.height / 2 + 230, 'RESUME', {
+            fontSize: '32px',
+            color: '#00ff00',
+            backgroundColor: '#333333',
+            padding: { x: 20, y: 10 }
+        }).setOrigin(0.5).setInteractive().setScrollFactor(0).setDepth(1002);
+
+        resumeButton.on('pointerdown', () => {
+            this.hidePauseMenu();
+        });
+
+        // Back to menu button
+        const menuButton = this.add.text(this.scale.width / 2, this.scale.height / 2 + 280, 'BACK TO MENU', {
+            fontSize: '24px',
+            color: '#ffffff',
+            backgroundColor: '#8b0000',
+            padding: { x: 20, y: 10 }
+        }).setOrigin(0.5).setInteractive().setScrollFactor(0).setDepth(1002);
+
+        menuButton.on('pointerdown', () => {
+            this.sound.stopAll();
+            this.scene.start('mainMenu');
+        });
+
+        // Store pause menu elements
+        this.pauseMenuElements = { overlay, panel, title, resumeButton, menuButton };
+
+        // ESC to resume
+        this.input.keyboard.once('keydown-ESC', () => {
+            this.hidePauseMenu();
+        });
     }
 
-    // Destroy sliders
-    if (this.pauseMenuSliders) {
-        this.pauseMenuSliders.forEach(slider => {
-            Object.values(slider).forEach(element => {
+    createPauseVolumeSlider(x, y, label, initialValue, onChange) {
+        // Label
+        this.add.text(x, y - 30, label, {
+            fontSize: '20px',
+            color: '#ffffff'
+        }).setScrollFactor(0).setDepth(1002);
+
+        // Slider track
+        const track = this.add.rectangle(x, y, 300, 8, 0x666666)
+            .setOrigin(0, 0.5)
+            .setScrollFactor(0)
+            .setDepth(1002);
+
+        // Slider handle
+        const handle = this.add.circle(x + (initialValue * 300), y, 12, 0xffffff)
+            .setInteractive()
+            .setScrollFactor(0)
+            .setDepth(1003);
+
+        // Volume value text
+        const valueText = this.add.text(x + 320, y, `${Math.round(initialValue * 100)}%`, {
+            fontSize: '16px',
+            color: '#ffffff'
+        }).setScrollFactor(0).setDepth(1002);
+
+        // Handle dragging
+        let isDragging = false;
+
+        handle.on('pointerdown', () => {
+            isDragging = true;
+        });
+
+        this.input.on('pointermove', (pointer) => {
+            if (isDragging) {
+                const newX = Phaser.Math.Clamp(pointer.x, x, x + 300);
+                handle.x = newX;
+
+                const value = (newX - x) / 300;
+                valueText.setText(`${Math.round(value * 100)}%`);
+                onChange(value);
+            }
+        });
+
+        this.input.on('pointerup', () => {
+            isDragging = false;
+        });
+
+        // Store slider elements for cleanup
+        if (!this.pauseMenuSliders) {
+            this.pauseMenuSliders = [];
+        }
+        this.pauseMenuSliders.push({ track, handle, valueText });
+    }
+
+    hidePauseMenu() {
+        if (!this.isPaused) return;
+
+        this.isPaused = false;
+        this.physics.resume();
+
+        // Destroy pause menu elements
+        if (this.pauseMenuElements) {
+            Object.values(this.pauseMenuElements).forEach(element => {
                 if (element) element.destroy();
             });
+            this.pauseMenuElements = null;
+        }
+
+        // Destroy sliders
+        if (this.pauseMenuSliders) {
+            this.pauseMenuSliders.forEach(slider => {
+                Object.values(slider).forEach(element => {
+                    if (element) element.destroy();
+                });
+            });
+            this.pauseMenuSliders = null;
+        }
+
+        // Re-enable ESC for pause
+        this.input.keyboard.once('keydown-ESC', () => {
+            if (!this.memoryActive && !this.isPaused) {
+                this.showPauseMenu();
+            }
         });
-        this.pauseMenuSliders = null;
     }
 
-    // Re-enable ESC for pause
-    this.input.keyboard.once('keydown-ESC', () => {
-        if (!this.memoryActive && !this.isPaused) {
-            this.showPauseMenu();
-        }
-    });
-}
-
-transitionToLevel2() {
-console.log('Starting transition to Level2...');
-this.cameras.main.fadeOut(200, 0, 0, 0);
-this.cameras.main.once('camerafadeoutcomplete', () => {
-    console.log('Fade complete, starting Level2 scene');
-    this.scene.start('level2');
-});
-}
+    transitionToLevel2() {
+        console.log('Starting transition to Level2...');
+        this.cameras.main.fadeOut(200, 0, 0, 0);
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+            console.log('Fade complete, starting Level2 scene');
+            // Stop music & ambience before switching scenes
+            this.sound.stopAll();
+            this.scene.start('level2');
+        });
+    }
 }

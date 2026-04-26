@@ -156,6 +156,14 @@ export default class Options extends Phaser.Scene {
         if (this.sound.get('menuMusic')) {
             this.sound.get('menuMusic').setVolume(value);
         }
+        // Update game music if it's playing
+        if (this.sound.get('gameMusic')) {
+            this.sound.get('gameMusic').setVolume(value);
+        }
+        // Update ambience if it's playing (kept at 60% of music volume)
+        if (this.sound.get('ambience')) {
+            this.sound.get('ambience').setVolume(value * 0.6);
+        }
     }
 
     updateGeneralVolume(value) {
