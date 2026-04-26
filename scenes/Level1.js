@@ -174,10 +174,6 @@ export default class Level1 extends Phaser.Scene {
 
             this.physics.add.existing(this.exitZone, true);
 
-            // Make the zone visible for debugging
-            this.exitZone.setFillStyle(0xff0000, 0.3);
-            console.log('Transition zone created at:', this.exitZone.x, this.exitZone.y);
-
             this.physics.add.overlap(this.player.sprite, this.exitZone, () => {
                 if (!this.transitionTriggered) {
                     console.log('Transition triggered!');

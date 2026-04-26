@@ -295,8 +295,6 @@ export default class Level2 extends Phaser.Scene {
                     }
                 });
                 
-                // Make the zone visible for debugging
-                zone.setFillStyle(0x00ff00, 0.3);
             });
         }
         
