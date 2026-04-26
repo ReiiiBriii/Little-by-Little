@@ -61,6 +61,18 @@ export default class MemoryModule {
     this.memoryMusic.play({ volume: 0.8 });
 
     this.sprite.destroy();
-    this.scene.showMemoryText(this.data.text, this.memoryMusic, backgroundMusic);
+
+    // Check if this is the thanks module - if so, show text then credits
+    if (this.data.id === 'thanks') {
+        // Show the thanks text first, then transition to credits
+        this.scene.showMemoryText(this.data.text, this.memoryMusic, backgroundMusic, () => {
+            // After memory text is closed, start credits
+            this.scene.sound.stopAll();
+            this.scene.scene.start('Credits');
+        });
+    } else {
+        // Regular memory module behavior
+        this.scene.showMemoryText(this.data.text, this.memoryMusic, backgroundMusic);
+    }
     }
 }

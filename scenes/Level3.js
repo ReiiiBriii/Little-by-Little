@@ -4,6 +4,7 @@ import GreasePath from '../objects/GreasePath.js';
 import MemoryModule from '../objects/MemoryModule.js';
 import memoryData from '../data/memoryData.js';
 import DashUpgrade from '../objects/DashUpgrade.js';
+import HUD from '../objects/HUD.js';
 
 export default class Level3 extends Phaser.Scene {
     constructor() {
@@ -13,6 +14,9 @@ export default class Level3 extends Phaser.Scene {
     preload() {
         // Tilesets (as defined in tmj file)
         this.load.image('Ground1', 'assets/tiles/Ground1.png');
+        
+        // Background image
+        this.load.image('background', 'assets/backgrounds/OutsideLandscape.png');
         
         // Map
         this.load.tilemapTiledJSON('map3', '/assets/maps/level3.tmj');
@@ -39,6 +43,9 @@ export default class Level3 extends Phaser.Scene {
     create() {
         this.cameras.main.zoom = 0.6;
         this.transitionTriggered = false;
+        
+        // Create background
+        this.createBackground();
         
         // Animations
         if (!this.anims.exists('idle')) {
@@ -153,12 +160,27 @@ export default class Level3 extends Phaser.Scene {
         this.physics.add.collider(this.player.sprite, layer1);
         console.log('Colliders added for Tile Layer 1');
         
-        this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
-        this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
-
         // Initialize collected memories set from registry or create new
         this.collectedMemories = this.registry.get('collectedMemories') || new Set();
         this.memoryActive = false;
+        
+        // Create memory module for journal1 entry
+        const memoryModuleX = 350; // Fixed X position on map
+        const memoryModuleY = 300; // Fixed Y position on map
+
+        if (!this.collectedMemories.has('journal1')) {
+            console.log('Creating memory module for journal1 at fixed position:', memoryModuleX, memoryModuleY);
+            const memoryModule = new MemoryModule(this, memoryModuleX, memoryModuleY, memoryData.journal1);
+            memoryModule.setupOverlap(this.player);
+            console.log('Memory module created:', memoryModule);
+            memoryModule.sprite.setVisible(true);
+            memoryModule.sprite.scale = 1;
+        } else {
+            console.log('Memory module journal1 already collected, skipping creation');
+        }
+        
+        this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
+        this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
 
         // Level transition zone back to Level2
         const transitionPoint = objectLayer?.objects?.find(obj => obj.name === 'transition');
@@ -182,8 +204,7 @@ export default class Level3 extends Phaser.Scene {
                 }
             });
             
-            // Make the zone visible for debugging
-            this.exitZone.setFillStyle(0x00ff00, 0.3);
+
         }
         
 
@@ -230,6 +251,28 @@ export default class Level3 extends Phaser.Scene {
         });
         
         console.log('Audio setup complete - Music:', musicVolume, 'General:', generalVolume, 'SFX:', sfxVolume);
+
+        // --- HUD ---
+        this.hud = new HUD(this);
+
+        // --- ESC → Pause Menu ---
+        this.isPaused = false;
+        this.setupPauseKey();
+    }
+
+    setupPauseKey() {
+        this.input.keyboard.on('keydown-ESC', () => {
+            if (this.memoryActive || this.isPaused) return;
+            this.isPaused = true;
+            this.scene.pause();
+            this.scene.launch('pauseMenu', { previousScene: 'level3' });
+            this.scene.bringToTop('pauseMenu');
+        });
+
+        // Re-enable when scene is resumed
+        this.events.on('resume', () => {
+            this.isPaused = false;
+        });
     }
 
     update(time, delta) {
@@ -410,5 +453,22 @@ export default class Level3 extends Phaser.Scene {
             this.registry.set('comingFromLevel3', true);
             this.scene.start('level2');
         });
+    }
+
+    createBackground() {
+        const width = this.scale.width;
+        const height = this.scale.height;
+        
+        // Create a single large background image
+        const background = this.add.image(width / 2, height / 2, 'background')
+            .setOrigin(0.5, 0.5)
+            .setScrollFactor(0)
+            .setDepth(-1);
+        
+        // Scale the background to be much larger than the screen
+        const bgScale = Math.max(width / background.width, height / background.height) * 2.5;
+        background.setScale(bgScale);
+        
+        console.log('Background created with scale:', bgScale);
     }
 }

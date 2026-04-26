@@ -4,6 +4,7 @@ import GreasePath from '../objects/GreasePath.js';
 import MemoryModule from '../objects/MemoryModule.js';
 import memoryData from '../data/memoryData.js';
 import Spring from '../objects/Spring.js';
+import HUD from '../objects/HUD.js';
 
 export default class Level2 extends Phaser.Scene {
     constructor() {
@@ -247,6 +248,21 @@ export default class Level2 extends Phaser.Scene {
         // Initialize collected memories set from registry or create new
         this.collectedMemories = this.registry.get('collectedMemories') || new Set();
         this.memoryActive = false;
+        
+        // Create memory module for thanks data
+        const memoryModuleX = 8000; // Fixed X position on map
+        const memoryModuleY = 50; // Fixed Y position on map
+
+        if (!this.collectedMemories.has('thanks')) {
+            console.log('Creating memory module for thanks at fixed position:', memoryModuleX, memoryModuleY);
+            const memoryModule = new MemoryModule(this, memoryModuleX, memoryModuleY, memoryData.thanks);
+            memoryModule.setupOverlap(this.player);
+            console.log('Memory module created:', memoryModule);
+            memoryModule.sprite.setVisible(true);
+            memoryModule.sprite.scale = 1;
+        } else {
+            console.log('Memory module thanks already collected, skipping creation');
+        }
 
         // Level transition zones - handle multiple transitions
         const transitionPoints = objectLayer?.objects?.filter(obj => obj.name === 'transition');
@@ -280,8 +296,6 @@ export default class Level2 extends Phaser.Scene {
                     }
                 });
                 
-                // Make the zone visible for debugging
-                zone.setFillStyle(0x00ff00, 0.3);
             });
         }
         
@@ -329,6 +343,28 @@ export default class Level2 extends Phaser.Scene {
         });
         
         console.log('Audio setup complete - Music:', musicVolume, 'General:', generalVolume, 'SFX:', sfxVolume);
+
+        // --- HUD ---
+        this.hud = new HUD(this);
+
+        // --- ESC → Pause Menu ---
+        this.isPaused = false;
+        this.setupPauseKey();
+    }
+
+    setupPauseKey() {
+        this.input.keyboard.on('keydown-ESC', () => {
+            if (this.memoryActive || this.isPaused) return;
+            this.isPaused = true;
+            this.scene.pause();
+            this.scene.launch('pauseMenu', { previousScene: 'level2' });
+            this.scene.bringToTop('pauseMenu');
+        });
+
+        // Re-enable when scene is resumed
+        this.events.on('resume', () => {
+            this.isPaused = false;
+        });
     }
 
     update(time, delta) {
@@ -375,7 +411,7 @@ export default class Level2 extends Phaser.Scene {
         console.log('Volumes updated - Music:', musicVolume, 'General:', generalVolume, 'SFX:', sfxVolume, 'Ambience:', ambienceVolume);
     }
 
-    showMemoryText(text, music = null, backgroundMusic = null) {
+    showMemoryText(text, music = null, backgroundMusic = null, onComplete = null) {
         if (this.memoryActive) return;
         this.memoryActive = true;
 
@@ -450,6 +486,11 @@ export default class Level2 extends Phaser.Scene {
 
             if (backgroundMusic) {
                 backgroundMusic.resume();
+            }
+
+            // Call onComplete callback if provided
+            if (onComplete) {
+                onComplete();
             }
         };
 

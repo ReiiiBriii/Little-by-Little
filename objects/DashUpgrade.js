@@ -49,6 +49,11 @@ export default class DashUpgrade {
         // Save dash upgrade collection status to registry for persistence across levels
         this.scene.registry.set('dashUpgradeCollected', true);
 
+        // Update HUD if it exists
+        if (this.scene.hud) {
+            this.scene.hud.popIcon('dashUpgradeCollected');
+        }
+
         this.sprite.destroy();
         this.showDashGuide();
     }
