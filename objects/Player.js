@@ -12,7 +12,7 @@ export default class Player {
             riseGravityMultiplier: 2.0,
             fallGravityMultiplier: 4.5,
             jumpCutMultiplier: 0.4,
-            dashSpeed: 2500,
+            dashSpeed: 1500,
             dashDuration: 200,
             dashCooldown: 200,
             gravity: 300,
@@ -29,6 +29,9 @@ export default class Player {
         // Tighten and lower the hitbox so visual feet rest on tiles.
         this.sprite.body.setSize(96, 130);
         this.sprite.body.setOffset(48, 35);
+
+        // Prevent tunneling through tiles at high dash speeds.
+        this.sprite.body.setMaxVelocity(1600, 1600);
 
         // --- Input ---
         this.keys = scene.input.keyboard.addKeys('W,A,S,D,SPACE,SHIFT');
@@ -80,7 +83,7 @@ export default class Player {
         const pad = this.scene.input.gamepad && this.scene.input.gamepad.total > 0 ? this.scene.input.gamepad.getPad(0) : null;
         const lsX = pad && pad.leftStick ? pad.leftStick.x : 0;
         const lsY = pad && pad.leftStick ? pad.leftStick.y : 0;
-        
+
         const wantLeft = this.keys.A.isDown || (pad && (pad.left || lsX < -0.4));
         const wantRight = this.keys.D.isDown || (pad && (pad.right || lsX > 0.4));
         const wantUp = this.keys.W.isDown || (pad && (pad.up || lsY < -0.4));
@@ -93,7 +96,7 @@ export default class Player {
             jumpJustDown = true;
         }
         this.wasPadJumpDown = padJumpDown;
-        
+
         let dashJustDown = Phaser.Input.Keyboard.JustDown(this.keys.SHIFT);
         const padDashDown = pad && (pad.X || pad.Y || pad.R1 || pad.R2);
         if (padDashDown && !this.wasPadDashDown) {
@@ -150,12 +153,6 @@ export default class Player {
                 this.scene.sound.play('jumpSound', { volume: 0.6 });
             }
 
-            const control = Phaser.Math.Clamp(this.frictionMultiplier * 2, 0.2, 1);
-        } 
-        // --- Jump ---
-        if (jumpDown && onGround && !this.isJumping && this.hasCollectedMemory) {
-            this.sprite.setVelocityY(jumpForce);
-            this.isJumping = true;
         }
 
         if (this.isJumping && !jumpDown && body.velocity.y < 0) {
@@ -190,9 +187,9 @@ export default class Player {
             dy /= len;
 
             this.sprite.setVelocity(
-            dx * dashSpeed * this.currentDashMultiplier,
-            dy * dashSpeed * this.currentDashMultiplier
-        );
+                dx * dashSpeed * this.currentDashMultiplier,
+                dy * dashSpeed * this.currentDashMultiplier
+            );
 
             // if (this.dashedDown) {
             //     this.scene.tweens.killTweensOf(this.sprite);
@@ -216,7 +213,7 @@ export default class Player {
             });
         }
 
-                // --- Grease Effect ---
+        // --- Grease Effect ---
         if (this.isOnGrease) {
             this.frictionMultiplier = 0.2;
             this.currentDashMultiplier = 1.6; // tweak this

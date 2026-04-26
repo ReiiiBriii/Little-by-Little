@@ -50,24 +50,93 @@ export default class Spring {
         this.scene.registry.set('springCollected', true);
 
         this.sprite.destroy();
-        
-        // Show a simple message when spring is collected
-        const text = this.scene.add.text(
-            this.player.sprite.x,
-            this.player.sprite.y - 100,
-            'Spring collected! Jumping unlocked!',
-            {
-                fontSize: '32px',
-                color: '#00ff00',
-                align: 'center',
-                backgroundColor: '#000000',
-                padding: { x: 10, y: 5 }
-            }
-        ).setOrigin(0.5).setScrollFactor(0).setDepth(2000);
+        this.showSpringGuide();
+    }
 
-        // Remove the text after 2 seconds
-        this.scene.time.delayedCall(2000, () => {
-            text.destroy();
+    showSpringGuide() {
+        const scene = this.scene;
+
+        // Freeze player movement
+        this.player.sprite.setVelocity(0, 0);
+        this.player.sprite.body.enable = false;
+
+        // Darken the screen
+        const overlay = scene.add.rectangle(
+            0, 0,
+            scene.scale.width, scene.scale.height,
+            0x000000, 0.7
+        )
+            .setOrigin(0)
+            .setScrollFactor(0)
+            .setDepth(2000);
+
+        // Title text
+        const title = scene.add.text(
+            scene.scale.width / 2,
+            scene.scale.height * 0.35,
+            'Spring Acquired!',
+            {
+                fontSize: '72px',
+                color: '#00ff88',
+                align: 'center',
+                fontStyle: 'bold'
+            }
+        )
+        .setOrigin(0.5)
+        .setScrollFactor(0)
+        .setDepth(2001);
+
+        // Instruction text
+        const instruction = scene.add.text(
+            scene.scale.width / 2,
+            scene.scale.height * 0.50,
+            'You can now JUMP!\nPress SPACE to leap into the air.',
+            {
+                fontSize: '48px',
+                color: '#ffffff',
+                align: 'center',
+                lineSpacing: 12
+            }
+        )
+        .setOrigin(0.5)
+        .setScrollFactor(0)
+        .setDepth(2001);
+
+        // Proceed prompt
+        const proceedText = scene.add.text(
+            scene.scale.width / 2,
+            scene.scale.height * 0.75,
+            '[ Press SPACE to proceed ]',
+            {
+                fontSize: '36px',
+                color: '#aaaaaa',
+                align: 'center',
+                fontStyle: 'italic'
+            }
+        )
+        .setOrigin(0.5)
+        .setScrollFactor(0)
+        .setDepth(2001);
+
+        // Pulse the prompt
+        scene.tweens.add({
+            targets: proceedText,
+            alpha: { from: 1, to: 0.4 },
+            duration: 800,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        // Dismiss on SPACE
+        scene.input.keyboard.once('keydown-SPACE', () => {
+            overlay.destroy();
+            title.destroy();
+            instruction.destroy();
+            proceedText.destroy();
+
+            this.player.sprite.body.enable = true;
+            this.player.sprite.setVelocity(0, 0);
         });
     }
 }

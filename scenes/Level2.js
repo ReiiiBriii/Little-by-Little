@@ -176,7 +176,7 @@ export default class Level2 extends Phaser.Scene {
         this.player.update(time, delta);
     }
 
-    showMemoryText(text) {
+    showMemoryText(text, music = null, backgroundMusic = null) {
         if (this.memoryActive) return;
         this.memoryActive = true;
 
@@ -198,43 +198,106 @@ export default class Level2 extends Phaser.Scene {
             height / 2,
             '',
             {
-                fontSize: '18px',
+                fontSize: '64px',
                 color: '#ffffff',
                 align: 'center',
-                wordWrap: { width: width * 0.7 }
+                wordWrap: { width: width * 0.8 }
             }
         )
         .setOrigin(0.5)
         .setScrollFactor(0)
         .setDepth(101);
 
-        let displayed = '';
-        let i = 0;
-
-        this.memoryTimer = this.time.addEvent({
-            delay: 30,
-            repeat: cleanText.length - 1,
-            callback: () => {
-                displayed += cleanText[i];
-                storyText.setText(displayed);
-                i++;
+        // "Press SPACE to proceed" prompt — hidden until typewriter finishes
+        const proceedText = this.add.text(
+            width / 2,
+            height * 0.85,
+            '[ Press SPACE to proceed ]',
+            {
+                fontSize: '36px',
+                color: '#aaaaaa',
+                align: 'center',
+                fontStyle: 'italic'
             }
-        });
+        )
+        .setOrigin(0.5)
+        .setScrollFactor(0)
+        .setDepth(101)
+        .setAlpha(0);
 
-        this.input.keyboard.once('keydown-SPACE', () => {
+        let displayed = '';
+        let charIndex = 0;
+        let typewriterDone = false;
+
+        const textDisplayDuration = music ? Math.max(20, (music.duration * 1000) / cleanText.length * 0.6) : 30;
+
+        const closeMemory = () => {
             if (this.memoryTimer) {
                 this.memoryTimer.remove(false);
                 this.memoryTimer = null;
             }
 
+            if (music && music.isPlaying) {
+                music.stop();
+            }
+
             overlay.destroy();
             storyText.destroy();
+            proceedText.destroy();
 
             this.player.sprite.body.enable = true;
             this.player.sprite.setVelocity(0, 0);
-
             this.memoryActive = false;
+
+            if (backgroundMusic) {
+                backgroundMusic.resume();
+            }
+        };
+
+        const showProceedPrompt = () => {
+            typewriterDone = true;
+            proceedText.setAlpha(1);
+
+            this.tweens.add({
+                targets: proceedText,
+                alpha: { from: 1, to: 0.4 },
+                duration: 800,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+        };
+
+        this.memoryTimer = this.time.addEvent({
+            delay: textDisplayDuration,
+            repeat: cleanText.length - 1,
+            callback: () => {
+                displayed += cleanText[charIndex];
+                storyText.setText(displayed);
+                charIndex++;
+
+                if (charIndex >= cleanText.length) {
+                    showProceedPrompt();
+                }
+            }
         });
+
+        const onSpace = () => {
+            if (!typewriterDone) {
+                if (this.memoryTimer) {
+                    this.memoryTimer.remove(false);
+                    this.memoryTimer = null;
+                }
+                storyText.setText(cleanText);
+                showProceedPrompt();
+
+                this.input.keyboard.once('keydown-SPACE', onSpace);
+            } else {
+                closeMemory();
+            }
+        };
+
+        this.input.keyboard.once('keydown-SPACE', onSpace);
     }
 
     transitionToLevel1() {

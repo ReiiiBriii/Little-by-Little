@@ -17,7 +17,10 @@ new Phaser.Game({
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 500 }
+            gravity: { y: 500 },
+            fps: 180,
+            fixedStep: true,
+            tileBias: 48
         }
     }
 });
