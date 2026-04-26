@@ -14,6 +14,9 @@ export default class Level3 extends Phaser.Scene {
         // Tilesets (as defined in tmj file)
         this.load.image('Ground1', 'assets/tiles/Ground1.png');
         
+        // Background image
+        this.load.image('background', 'assets/backgrounds/OutsideLandscape.png');
+        
         // Map
         this.load.tilemapTiledJSON('map3', '/assets/maps/level3.tmj');
         
@@ -39,6 +42,9 @@ export default class Level3 extends Phaser.Scene {
     create() {
         this.cameras.main.zoom = 0.6;
         this.transitionTriggered = false;
+        
+        // Create background
+        this.createBackground();
         
         // Animations
         if (!this.anims.exists('idle')) {
@@ -197,8 +203,7 @@ export default class Level3 extends Phaser.Scene {
                 }
             });
             
-            // Make the zone visible for debugging
-            this.exitZone.setFillStyle(0x00ff00, 0.3);
+
         }
         
 
@@ -425,5 +430,22 @@ export default class Level3 extends Phaser.Scene {
             this.registry.set('comingFromLevel3', true);
             this.scene.start('level2');
         });
+    }
+
+    createBackground() {
+        const width = this.scale.width;
+        const height = this.scale.height;
+        
+        // Create a single large background image
+        const background = this.add.image(width / 2, height / 2, 'background')
+            .setOrigin(0.5, 0.5)
+            .setScrollFactor(0)
+            .setDepth(-1);
+        
+        // Scale the background to be much larger than the screen
+        const bgScale = Math.max(width / background.width, height / background.height) * 2.5;
+        background.setScale(bgScale);
+        
+        console.log('Background created with scale:', bgScale);
     }
 }
