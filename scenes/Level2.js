@@ -247,6 +247,21 @@ export default class Level2 extends Phaser.Scene {
         // Initialize collected memories set from registry or create new
         this.collectedMemories = this.registry.get('collectedMemories') || new Set();
         this.memoryActive = false;
+        
+        // Create memory module for thanks data
+        const memoryModuleX = 8000; // Fixed X position on map
+        const memoryModuleY = 50; // Fixed Y position on map
+
+        if (!this.collectedMemories.has('thanks')) {
+            console.log('Creating memory module for thanks at fixed position:', memoryModuleX, memoryModuleY);
+            const memoryModule = new MemoryModule(this, memoryModuleX, memoryModuleY, memoryData.thanks);
+            memoryModule.setupOverlap(this.player);
+            console.log('Memory module created:', memoryModule);
+            memoryModule.sprite.setVisible(true);
+            memoryModule.sprite.scale = 1;
+        } else {
+            console.log('Memory module thanks already collected, skipping creation');
+        }
 
         // Level transition zones - handle multiple transitions
         const transitionPoints = objectLayer?.objects?.filter(obj => obj.name === 'transition');
@@ -375,7 +390,7 @@ export default class Level2 extends Phaser.Scene {
         console.log('Volumes updated - Music:', musicVolume, 'General:', generalVolume, 'SFX:', sfxVolume, 'Ambience:', ambienceVolume);
     }
 
-    showMemoryText(text, music = null, backgroundMusic = null) {
+    showMemoryText(text, music = null, backgroundMusic = null, onComplete = null) {
         if (this.memoryActive) return;
         this.memoryActive = true;
 
@@ -450,6 +465,11 @@ export default class Level2 extends Phaser.Scene {
 
             if (backgroundMusic) {
                 backgroundMusic.resume();
+            }
+
+            // Call onComplete callback if provided
+            if (onComplete) {
+                onComplete();
             }
         };
 

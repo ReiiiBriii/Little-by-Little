@@ -153,12 +153,27 @@ export default class Level3 extends Phaser.Scene {
         this.physics.add.collider(this.player.sprite, layer1);
         console.log('Colliders added for Tile Layer 1');
         
-        this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
-        this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
-
         // Initialize collected memories set from registry or create new
         this.collectedMemories = this.registry.get('collectedMemories') || new Set();
         this.memoryActive = false;
+        
+        // Create memory module for journal1 entry
+        const memoryModuleX = 350; // Fixed X position on map
+        const memoryModuleY = 300; // Fixed Y position on map
+
+        if (!this.collectedMemories.has('journal1')) {
+            console.log('Creating memory module for journal1 at fixed position:', memoryModuleX, memoryModuleY);
+            const memoryModule = new MemoryModule(this, memoryModuleX, memoryModuleY, memoryData.journal1);
+            memoryModule.setupOverlap(this.player);
+            console.log('Memory module created:', memoryModule);
+            memoryModule.sprite.setVisible(true);
+            memoryModule.sprite.scale = 1;
+        } else {
+            console.log('Memory module journal1 already collected, skipping creation');
+        }
+        
+        this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
+        this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
 
         // Level transition zone back to Level2
         const transitionPoint = objectLayer?.objects?.find(obj => obj.name === 'transition');
