@@ -27,7 +27,7 @@ export default class MainMenu extends Phaser.Scene {
             this.menuMusic = this.sound.add('menuMusic');
 
             // Get saved music volume or use default
-            const musicVolume = this.registry.get('musicVolume') || 0.5;
+            const musicVolume = this.registry.get('musicVolume') || 1;
 
             // Play menu music with seamless looping
             this.menuMusic.play({

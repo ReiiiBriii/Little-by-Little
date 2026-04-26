@@ -14,13 +14,13 @@ export default class Level3 extends Phaser.Scene {
     preload() {
         // Tilesets (as defined in tmj file)
         this.load.image('Ground1', 'assets/tiles/Ground1.png');
-        
+
         // Background image
         this.load.image('background', 'assets/backgrounds/OutsideLandscape.png');
-        
+
         // Map
         this.load.tilemapTiledJSON('map3', 'assets/maps/level3.tmj');
-        
+
         // Sprites
         this.load.spritesheet('player', 'assets/sprites/Player.png', {
             frameWidth: 192,
@@ -30,7 +30,7 @@ export default class Level3 extends Phaser.Scene {
             frameWidth: 192,
             frameHeight: 192
         });
-        
+
         // Audio
         this.load.audio('gameMusic', 'assets/music/lilbylil-labscene.wav');
         this.load.audio('ambience', 'assets/music/lilbylil-labscene-ambience.wav');
@@ -43,10 +43,10 @@ export default class Level3 extends Phaser.Scene {
     create() {
         this.cameras.main.zoom = 0.6;
         this.transitionTriggered = false;
-        
+
         // Create background
         this.createBackground();
-        
+
         // Animations
         if (!this.anims.exists('idle')) {
             this.anims.create({
@@ -86,40 +86,40 @@ export default class Level3 extends Phaser.Scene {
 
         // Map  
         const map = this.make.tilemap({ key: 'map3' });
-        
+
         // Load tilesets
         const groundTiles = map.addTilesetImage('Ground1', 'Ground1');
-        
+
         console.log('Tilesets loaded:', {
             groundTiles: !!groundTiles,
             mapWidth: map.width,
             mapHeight: map.height
         });
-        
+
         // Build tilesets array
         const allTilesets = [groundTiles];
 
         // Create all layers as defined in tmj file
         let layer1;
-        
+
         try {
             layer1 = map.createLayer('Tile Layer 1', allTilesets, 0, 0);
             console.log('Tile Layer 1 created successfully');
         } catch (error) {
             console.error('Error creating layers:', error);
         }
-        
+
         // Set collision for main gameplay layer
         if (layer1) {
             layer1.setCollisionByExclusion([-1], true);
             map.setCollisionByProperty({ collides: true }, true, true, layer1);
         }
-        
+
         const mapWidth = map.width * map.tileWidth;
         const mapHeight = map.height * map.tileHeight;
 
         this.physics.world.setBounds(0, 0, mapWidth, mapHeight);
-        
+
         // Object layer
         const objectLayer = map.getObjectLayer('Objects');
         const spawnPoint = objectLayer?.objects?.find(obj => obj.name === 'fromLevel2');
@@ -130,7 +130,7 @@ export default class Level3 extends Phaser.Scene {
         }
 
         this.player = new Player(this, spawnPoint.x, spawnPoint.y);
-        
+
         // Check if spring has been collected from Level1
         const springCollected = this.registry.get('springCollected') || false;
         if (springCollected) {
@@ -138,7 +138,7 @@ export default class Level3 extends Phaser.Scene {
             this.player.hasCollectedMemory = true;
             console.log('Spring already collected in Level1, jumping enabled in Level3');
         }
-        
+
         // Check if dash upgrade has been collected
         const dashUpgradeCollected = this.registry.get('dashUpgradeCollected') || false;
         if (dashUpgradeCollected) {
@@ -155,15 +155,15 @@ export default class Level3 extends Phaser.Scene {
 
             console.log('Dash upgrade created in Level3 at:', dashUpgradeX, dashUpgradeY);
         }
-        
+
         // Add colliders for layer AFTER player is created
         this.physics.add.collider(this.player.sprite, layer1);
         console.log('Colliders added for Tile Layer 1');
-        
+
         // Initialize collected memories set from registry or create new
         this.collectedMemories = this.registry.get('collectedMemories') || new Set();
         this.memoryActive = false;
-        
+
         // Create memory module for journal1 entry
         const memoryModuleX = 350; // Fixed X position on map
         const memoryModuleY = 300; // Fixed Y position on map
@@ -178,7 +178,7 @@ export default class Level3 extends Phaser.Scene {
         } else {
             console.log('Memory module journal1 already collected, skipping creation');
         }
-        
+
         this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
         this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
 
@@ -186,7 +186,7 @@ export default class Level3 extends Phaser.Scene {
         const transitionPoint = objectLayer?.objects?.find(obj => obj.name === 'transition');
         if (transitionPoint) {
             console.log('Level3 transition point found:', transitionPoint.x, transitionPoint.y);
-            
+
             // Make the zone smaller to avoid immediate re-triggering
             this.exitZone = this.add.rectangle(
                 transitionPoint.x,
@@ -194,7 +194,7 @@ export default class Level3 extends Phaser.Scene {
                 Math.max(transitionPoint.width || 32, 64),
                 Math.max(transitionPoint.height || 32, 64)
             ).setOrigin(0.5);
-            
+
             this.physics.add.existing(this.exitZone, true);
             this.physics.add.overlap(this.player.sprite, this.exitZone, () => {
                 if (!this.transitionTriggered) {
@@ -203,20 +203,20 @@ export default class Level3 extends Phaser.Scene {
                     this.transitionToLevel2();
                 }
             });
-            
+
 
         }
-        
+
 
         // Stop any leftover sounds from previous scene
         this.sound.stopAll();
 
         // Read volume settings from Options / MainMenu registry
-        const musicVolume = this.registry.get('musicVolume') ?? 0.5;
-        const generalVolume = this.registry.get('generalVolume') ?? 0.5;
+        const musicVolume = this.registry.get('musicVolume') ?? 1;
+        const generalVolume = this.registry.get('generalVolume') ?? 1;
         const sfxVolume = this.registry.get('sfxVolume') ?? 0.7;
         const ambienceVolume = this.registry.get('ambienceVolume') ?? 0.6;
-        
+
         // Set general volume for all sounds
         this.sound.volume = generalVolume;
 
@@ -227,7 +227,7 @@ export default class Level3 extends Phaser.Scene {
         // Play ambience (looping) with separate ambience volume
         this.ambience = this.sound.add('ambience', { loop: true, volume: ambienceVolume });
         this.ambience.play();
-        
+
         // Store volume references for dynamic updates
         this.currentVolumes = {
             music: musicVolume,
@@ -235,7 +235,7 @@ export default class Level3 extends Phaser.Scene {
             sfx: sfxVolume,
             ambience: ambienceVolume
         };
-        
+
         // Listen for volume changes from Options menu
         this.registry.events.on('changedata-musicVolume', () => {
             this.updateVolumes();
@@ -249,7 +249,7 @@ export default class Level3 extends Phaser.Scene {
         this.registry.events.on('changedata-ambienceVolume', () => {
             this.updateVolumes();
         });
-        
+
         console.log('Audio setup complete - Music:', musicVolume, 'General:', generalVolume, 'SFX:', sfxVolume);
 
         // --- HUD ---
@@ -284,7 +284,7 @@ export default class Level3 extends Phaser.Scene {
         const sfxVolume = this.registry.get('sfxVolume') ?? 0.7;
         const generalVolume = this.registry.get('generalVolume') ?? 0.5;
         const finalVolume = sfxVolume * generalVolume;
-        
+
         return this.sound.play(soundKey, { volume: finalVolume });
     }
 
@@ -294,20 +294,20 @@ export default class Level3 extends Phaser.Scene {
         const generalVolume = this.registry.get('generalVolume') ?? 0.5;
         const sfxVolume = this.registry.get('sfxVolume') ?? 0.7;
         const ambienceVolume = this.registry.get('ambienceVolume') ?? 0.6;
-        
+
         // Update global volume
         this.sound.volume = generalVolume;
-        
+
         // Update music volume
         if (this.gameMusic) {
             this.gameMusic.setVolume(musicVolume);
         }
-        
+
         // Update ambience volume (separate from music volume)
         if (this.ambience) {
             this.ambience.setVolume(ambienceVolume);
         }
-        
+
         // Store updated volumes
         this.currentVolumes = {
             music: musicVolume,
@@ -315,7 +315,7 @@ export default class Level3 extends Phaser.Scene {
             sfx: sfxVolume,
             ambience: ambienceVolume
         };
-        
+
         console.log('Volumes updated - Music:', musicVolume, 'General:', generalVolume, 'SFX:', sfxVolume, 'Ambience:', ambienceVolume);
     }
 
@@ -347,9 +347,9 @@ export default class Level3 extends Phaser.Scene {
                 wordWrap: { width: width * 0.8 }
             }
         )
-        .setOrigin(0.5)
-        .setScrollFactor(0)
-        .setDepth(101);
+            .setOrigin(0.5)
+            .setScrollFactor(0)
+            .setDepth(101);
 
         // "Press SPACE to proceed" prompt — hidden until typewriter finishes
         const proceedText = this.add.text(
@@ -363,10 +363,10 @@ export default class Level3 extends Phaser.Scene {
                 fontStyle: 'italic'
             }
         )
-        .setOrigin(0.5)
-        .setScrollFactor(0)
-        .setDepth(101)
-        .setAlpha(0);
+            .setOrigin(0.5)
+            .setScrollFactor(0)
+            .setDepth(101)
+            .setAlpha(0);
 
         let displayed = '';
         let charIndex = 0;
@@ -458,17 +458,17 @@ export default class Level3 extends Phaser.Scene {
     createBackground() {
         const width = this.scale.width;
         const height = this.scale.height;
-        
+
         // Create a single large background image
         const background = this.add.image(width / 2, height / 2, 'background')
             .setOrigin(0.5, 0.5)
             .setScrollFactor(0)
             .setDepth(-1);
-        
+
         // Scale the background to be much larger than the screen
         const bgScale = Math.max(width / background.width, height / background.height) * 2.5;
         background.setScale(bgScale);
-        
+
         console.log('Background created with scale:', bgScale);
     }
 }

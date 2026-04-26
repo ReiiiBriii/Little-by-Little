@@ -191,11 +191,11 @@ export default class Level1 extends Phaser.Scene {
         this.sound.stopAll();
 
         // Read volume settings from Options / MainMenu registry
-        const musicVolume = this.registry.get('musicVolume') ?? 0.5;
-        const generalVolume = this.registry.get('generalVolume') ?? 0.5;
+        const musicVolume = this.registry.get('musicVolume') ?? 1;
+        const generalVolume = this.registry.get('generalVolume') ?? 1;
         const sfxVolume = this.registry.get('sfxVolume') ?? 0.7;
         const ambienceVolume = this.registry.get('ambienceVolume') ?? 0.6;
-        
+
         // Set general volume for all sounds
         this.sound.volume = generalVolume;
 
@@ -206,7 +206,7 @@ export default class Level1 extends Phaser.Scene {
         // Play ambience (looping) with separate ambience volume
         this.ambience = this.sound.add('ambience', { loop: true, volume: ambienceVolume });
         this.ambience.play();
-        
+
         // Store volume references for dynamic updates
         this.currentVolumes = {
             music: musicVolume,
@@ -214,7 +214,7 @@ export default class Level1 extends Phaser.Scene {
             sfx: sfxVolume,
             ambience: ambienceVolume
         };
-        
+
         // Listen for volume changes from Options menu
         this.registry.events.on('changedata-musicVolume', () => {
             this.updateVolumes();
@@ -228,7 +228,7 @@ export default class Level1 extends Phaser.Scene {
         this.registry.events.on('changedata-ambienceVolume', () => {
             this.updateVolumes();
         });
-        
+
         console.log('Audio setup complete - Music:', musicVolume, 'General:', generalVolume, 'SFX:', sfxVolume, 'Ambience:', ambienceVolume);
 
         // --- HUD ---
@@ -263,7 +263,7 @@ export default class Level1 extends Phaser.Scene {
         const sfxVolume = this.registry.get('sfxVolume') ?? 0.7;
         const generalVolume = this.registry.get('generalVolume') ?? 0.5;
         const finalVolume = sfxVolume * generalVolume;
-        
+
         return this.sound.play(soundKey, { volume: finalVolume });
     }
 
@@ -273,20 +273,20 @@ export default class Level1 extends Phaser.Scene {
         const generalVolume = this.registry.get('generalVolume') ?? 0.5;
         const sfxVolume = this.registry.get('sfxVolume') ?? 0.7;
         const ambienceVolume = this.registry.get('ambienceVolume') ?? 0.6;
-        
+
         // Update global volume
         this.sound.volume = generalVolume;
-        
+
         // Update music volume
         if (this.gameMusic) {
             this.gameMusic.setVolume(musicVolume);
         }
-        
+
         // Update ambience volume (separate from music volume)
         if (this.ambience) {
             this.ambience.setVolume(ambienceVolume);
         }
-        
+
         // Store updated volumes
         this.currentVolumes = {
             music: musicVolume,
@@ -294,7 +294,7 @@ export default class Level1 extends Phaser.Scene {
             sfx: sfxVolume,
             ambience: ambienceVolume
         };
-        
+
         console.log('Volumes updated - Music:', musicVolume, 'General:', generalVolume, 'SFX:', sfxVolume, 'Ambience:', ambienceVolume);
     }
 

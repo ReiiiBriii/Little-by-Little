@@ -17,14 +17,14 @@ export default class Level2 extends Phaser.Scene {
         this.load.image('HallwayGround', 'assets/tiles/Hallway tileset.png');
         this.load.image('Hallway BG', 'assets/backgrounds/Hallway BG.png');
         this.load.image('HallwayAssets', 'assets/backgrounds/HallwayAssets.png');
-        
+
         // Additional backgrounds if needed
         this.load.image('wallTiles', 'assets/backgrounds/LabWall.png');
         this.load.image('assetTiles', 'assets/backgrounds/LabAssets.png');
-        
+
         // Map
         this.load.tilemapTiledJSON('map2', 'assets/maps/level2.tmj');
-        
+
         // Sprites
         this.load.spritesheet('player', 'assets/sprites/Player.png', {
             frameWidth: 192,
@@ -34,7 +34,7 @@ export default class Level2 extends Phaser.Scene {
             frameWidth: 192,
             frameHeight: 192
         });
-        
+
         // Audio
         this.load.audio('gameMusic', 'assets/music/lilbylil-labscene.wav');
         this.load.audio('ambience', 'assets/music/lilbylil-labscene-ambience.wav');
@@ -47,7 +47,7 @@ export default class Level2 extends Phaser.Scene {
     create() {
         this.cameras.main.zoom = 0.6;
         this.transitionTriggered = false;
-        
+
         // Animations
         if (!this.anims.exists('idle')) {
             this.anims.create({
@@ -87,12 +87,12 @@ export default class Level2 extends Phaser.Scene {
 
         // Map  
         const map = this.make.tilemap({ key: 'map2' });
-        
+
         // Load tilesets with error handling
         const groundTiles = map.addTilesetImage('HallwayGround', 'HallwayGround');
         const steelBeams = map.addTilesetImage('Steel Beams', 'Steel Beams');
         const hallwayBG = map.addTilesetImage('Hallway BG', 'Hallway BG');
-        
+
         // Try loading HallwayAssets with explicit error handling
         let hallwayAssets = null;
         try {
@@ -101,7 +101,7 @@ export default class Level2 extends Phaser.Scene {
         } catch (error) {
             console.error('Failed to load HallwayAssets tileset:', error);
         }
-        
+
         console.log('Tilesets loaded:', {
             groundTiles: !!groundTiles,
             steelBeams: !!steelBeams,
@@ -110,7 +110,7 @@ export default class Level2 extends Phaser.Scene {
             mapWidth: map.width,
             mapHeight: map.height
         });
-        
+
         // Debug: Check if HallwayAssets image is loaded correctly
         if (hallwayAssets) {
             console.log('HallwayAssets tileset details:', {
@@ -122,7 +122,7 @@ export default class Level2 extends Phaser.Scene {
                 rows: hallwayAssets.rows
             });
         }
-        
+
         // Build tilesets array, excluding null ones
         const allTilesets = [groundTiles, steelBeams, hallwayBG];
         if (hallwayAssets) {
@@ -142,35 +142,35 @@ export default class Level2 extends Phaser.Scene {
 
         // Create all layers as defined in tmj file
         let backgroundLayer, backgroundLayer2, backgroundLayer3, layer1, layer2;
-        
+
         try {
             backgroundLayer = map.createLayer('Background', allTilesets, 0, 0);
             backgroundLayer2 = map.createLayer('Background 2', allTilesets, 0, 0);
             backgroundLayer3 = map.createLayer('Background 3', allTilesets, 0, 0);
             layer1 = map.createLayer('Tile Layer 1', allTilesets, 0, 0);
             layer2 = map.createLayer('Tile Layer 2', allTilesets, 0, 0);
-            
+
             console.log('All 5 layers created successfully');
         } catch (error) {
             console.error('Error creating layers:', error);
         }
-        
+
         // Set collision for main gameplay layer
         if (layer1) {
             layer1.setCollisionByExclusion([-1], true);
             map.setCollisionByProperty({ collides: true }, true, true, layer1);
         }
-        
+
         if (layer2) {
             map.setCollisionByProperty({ collides: true }, true, true, layer2);
         }
-        
+
         // Debug: Check tile counts and tile indices with tileset mapping
         const debugTiles = (layer, name) => {
             if (!layer) return;
             const tiles = layer.filterTiles(tile => tile.index !== -1);
             const uniqueIndices = [...new Set(tiles.map(tile => tile.index))];
-            
+
             // Map tile indices to tilesets
             const tilesetMapping = uniqueIndices.map(index => {
                 let tilesetName = 'Unknown';
@@ -180,21 +180,21 @@ export default class Level2 extends Phaser.Scene {
                 else if (index >= 56) tilesetName = 'HallwayAssets';
                 return `${index}(${tilesetName})`;
             });
-            
+
             console.log(`${name} - Total tiles: ${tiles.length}, Unique indices: ${tilesetMapping.slice(0, 15).join(', ')}${tilesetMapping.length > 15 ? '...' : ''}`);
         };
-        
+
         debugTiles(backgroundLayer, 'Background');
         debugTiles(backgroundLayer2, 'Background 2');
         debugTiles(backgroundLayer3, 'Background 3');
         debugTiles(layer1, 'Tile Layer 1');
         debugTiles(layer2, 'Tile Layer 2');
-        
+
         const mapWidth = map.width * map.tileWidth;
         const mapHeight = map.height * map.tileHeight;
 
         this.physics.world.setBounds(0, 0, mapWidth, mapHeight);
-        
+
         // Object layer
         const objectLayer = map.getObjectLayer('Objects');
         let spawnName = 'fromlevel1'; // default
@@ -228,7 +228,7 @@ export default class Level2 extends Phaser.Scene {
 
             console.log('Spring created in Level2 at:', springX, springY);
         }
-        
+
         // Check if dash upgrade has been collected
         const dashUpgradeCollected = this.registry.get('dashUpgradeCollected') || false;
         if (dashUpgradeCollected) {
@@ -236,19 +236,19 @@ export default class Level2 extends Phaser.Scene {
             this.player.hasDashUpgrade = true;
             console.log('Dash upgrade already collected, dash enabled');
         }
-        
+
         // Add colliders for both layers AFTER player is created
         this.physics.add.collider(this.player.sprite, layer1);
         this.physics.add.collider(this.player.sprite, layer2);
         console.log('Colliders added for both layers');
-        
+
         this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
         this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
 
         // Initialize collected memories set from registry or create new
         this.collectedMemories = this.registry.get('collectedMemories') || new Set();
         this.memoryActive = false;
-        
+
         // Create memory module for thanks data
         const memoryModuleX = 8000; // Fixed X position on map
         const memoryModuleY = 50; // Fixed Y position on map
@@ -270,7 +270,7 @@ export default class Level2 extends Phaser.Scene {
             transitionPoints.forEach((transitionPoint, index) => {
                 const targetLevel = transitionPoint.properties?.find(prop => prop.name === 'targetLevel')?.value;
                 console.log(`Level2 transition point ${index + 1} found:`, transitionPoint.x, transitionPoint.y, 'target:', targetLevel);
-                
+
                 // Make the zone smaller to avoid immediate re-triggering
                 const zone = this.add.rectangle(
                     transitionPoint.x,
@@ -278,13 +278,13 @@ export default class Level2 extends Phaser.Scene {
                     Math.max(transitionPoint.width || 32, 64),
                     Math.max(transitionPoint.height || 32, 64)
                 ).setOrigin(0.5);
-                
+
                 this.physics.add.existing(zone, true);
                 this.physics.add.overlap(this.player.sprite, zone, () => {
                     if (!this.transitionTriggered) {
                         console.log(`Level2 transition to ${targetLevel} triggered!`);
                         this.transitionTriggered = true;
-                        
+
                         if (targetLevel === 'level1') {
                             this.transitionToLevel1();
                         } else if (targetLevel === 'level3') {
@@ -295,20 +295,20 @@ export default class Level2 extends Phaser.Scene {
                         }
                     }
                 });
-                
+
             });
         }
-        
+
 
         // Stop any leftover sounds from previous scene
         this.sound.stopAll();
 
         // Read volume settings from Options / MainMenu registry
-        const musicVolume = this.registry.get('musicVolume') ?? 0.5;
-        const generalVolume = this.registry.get('generalVolume') ?? 0.5;
+        const musicVolume = this.registry.get('musicVolume') ?? 1;
+        const generalVolume = this.registry.get('generalVolume') ?? 1;
         const sfxVolume = this.registry.get('sfxVolume') ?? 0.7;
         const ambienceVolume = this.registry.get('ambienceVolume') ?? 0.6;
-        
+
         // Set general volume for all sounds
         this.sound.volume = generalVolume;
 
@@ -319,7 +319,7 @@ export default class Level2 extends Phaser.Scene {
         // Play ambience (looping) with separate ambience volume
         this.ambience = this.sound.add('ambience', { loop: true, volume: ambienceVolume });
         this.ambience.play();
-        
+
         // Store volume references for dynamic updates
         this.currentVolumes = {
             music: musicVolume,
@@ -327,7 +327,7 @@ export default class Level2 extends Phaser.Scene {
             sfx: sfxVolume,
             ambience: ambienceVolume
         };
-        
+
         // Listen for volume changes from Options menu
         this.registry.events.on('changedata-musicVolume', () => {
             this.updateVolumes();
@@ -341,7 +341,7 @@ export default class Level2 extends Phaser.Scene {
         this.registry.events.on('changedata-ambienceVolume', () => {
             this.updateVolumes();
         });
-        
+
         console.log('Audio setup complete - Music:', musicVolume, 'General:', generalVolume, 'SFX:', sfxVolume);
 
         // --- HUD ---
@@ -376,7 +376,7 @@ export default class Level2 extends Phaser.Scene {
         const sfxVolume = this.registry.get('sfxVolume') ?? 0.7;
         const generalVolume = this.registry.get('generalVolume') ?? 0.5;
         const finalVolume = sfxVolume * generalVolume;
-        
+
         return this.sound.play(soundKey, { volume: finalVolume });
     }
 
@@ -386,20 +386,20 @@ export default class Level2 extends Phaser.Scene {
         const generalVolume = this.registry.get('generalVolume') ?? 0.5;
         const sfxVolume = this.registry.get('sfxVolume') ?? 0.7;
         const ambienceVolume = this.registry.get('ambienceVolume') ?? 0.6;
-        
+
         // Update global volume
         this.sound.volume = generalVolume;
-        
+
         // Update music volume
         if (this.gameMusic) {
             this.gameMusic.setVolume(musicVolume);
         }
-        
+
         // Update ambience volume (separate from music volume)
         if (this.ambience) {
             this.ambience.setVolume(ambienceVolume);
         }
-        
+
         // Store updated volumes
         this.currentVolumes = {
             music: musicVolume,
@@ -407,7 +407,7 @@ export default class Level2 extends Phaser.Scene {
             sfx: sfxVolume,
             ambience: ambienceVolume
         };
-        
+
         console.log('Volumes updated - Music:', musicVolume, 'General:', generalVolume, 'SFX:', sfxVolume, 'Ambience:', ambienceVolume);
     }
 
@@ -439,9 +439,9 @@ export default class Level2 extends Phaser.Scene {
                 wordWrap: { width: width * 0.8 }
             }
         )
-        .setOrigin(0.5)
-        .setScrollFactor(0)
-        .setDepth(101);
+            .setOrigin(0.5)
+            .setScrollFactor(0)
+            .setDepth(101);
 
         // "Press SPACE to proceed" prompt — hidden until typewriter finishes
         const proceedText = this.add.text(
@@ -455,10 +455,10 @@ export default class Level2 extends Phaser.Scene {
                 fontStyle: 'italic'
             }
         )
-        .setOrigin(0.5)
-        .setScrollFactor(0)
-        .setDepth(101)
-        .setAlpha(0);
+            .setOrigin(0.5)
+            .setScrollFactor(0)
+            .setDepth(101)
+            .setAlpha(0);
 
         let displayed = '';
         let charIndex = 0;
