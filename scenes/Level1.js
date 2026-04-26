@@ -326,7 +326,6 @@ export default class Level1 extends Phaser.Scene {
                 // Re-register so next press actually closes
                 this.input.keyboard.once('keydown-SPACE', onSpace);
             } else {
-                // Typewriter is done — close the overlay
                 closeMemory();
             }
         };
@@ -334,12 +333,180 @@ export default class Level1 extends Phaser.Scene {
         this.input.keyboard.once('keydown-SPACE', onSpace);
     }
 
-    transitionToLevel2() {
-        console.log('Starting transition to Level2...');
-        this.cameras.main.fadeOut(200, 0, 0, 0);
-        this.cameras.main.once('camerafadeoutcomplete', () => {
-            console.log('Fade complete, starting Level2 scene');
-            this.scene.start('level2');
-        });
+    showPauseMenu() {
+        if (this.isPaused) return;
+        
+        this.isPaused = true;
+        this.physics.pause();
+        this.player.sprite.setVelocity(0, 0);
+    this.player.sprite.setVelocity(0, 0);
+
+    // Add overlay
+    const overlay = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.8)
+        .setOrigin(0)
+        .setScrollFactor(0)
+        .setDepth(1000);
+
+    // Add pause panel
+    const panel = this.add.rectangle(this.scale.width / 2, this.scale.height / 2, 600, 500, 0x222222, 0.95)
+        .setOrigin(0.5)
+        .setScrollFactor(0)
+        .setDepth(1001);
+
+    // Title
+    const title = this.add.text(this.scale.width / 2, this.scale.height / 2 - 200, 'PAUSED', {
+        fontSize: '48px',
+        color: '#ffffff'
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(1002);
+
+    // Volume settings from registry
+    const musicVolume = this.registry.get('musicVolume') || 0.5;
+    const generalVolume = this.registry.get('generalVolume') || 0.5;
+    const sfxVolume = this.registry.get('sfxVolume') || 0.7;
+
+    // Create volume sliders
+    this.createPauseVolumeSlider(this.scale.width / 2 - 150, this.scale.height / 2 - 50, 'Music Volume', musicVolume, (value) => {
+        this.registry.set('musicVolume', value);
+        if (this.sound.get('gameMusic')) {
+            this.sound.get('gameMusic').setVolume(value);
+        }
+    });
+
+    this.createPauseVolumeSlider(this.scale.width / 2 - 150, this.scale.height / 2 + 50, 'General Volume', generalVolume, (value) => {
+        this.registry.set('generalVolume', value);
+        this.sound.volume = value;
+    });
+
+    this.createPauseVolumeSlider(this.scale.width / 2 - 150, this.scale.height / 2 + 150, 'SFX Volume', sfxVolume, (value) => {
+        this.registry.set('sfxVolume', value);
+    });
+
+    // Resume button
+    const resumeButton = this.add.text(this.scale.width / 2, this.scale.height / 2 + 230, 'RESUME', {
+        fontSize: '32px',
+        color: '#00ff00',
+        backgroundColor: '#333333',
+        padding: { x: 20, y: 10 }
+    }).setOrigin(0.5).setInteractive().setScrollFactor(0).setDepth(1002);
+
+    resumeButton.on('pointerdown', () => {
+        this.hidePauseMenu();
+    });
+
+    // Back to menu button
+    const menuButton = this.add.text(this.scale.width / 2, this.scale.height / 2 + 280, 'BACK TO MENU', {
+        fontSize: '24px',
+        color: '#ffffff',
+        backgroundColor: '#8b0000',
+        padding: { x: 20, y: 10 }
+    }).setOrigin(0.5).setInteractive().setScrollFactor(0).setDepth(1002);
+
+    menuButton.on('pointerdown', () => {
+        this.sound.stopAll();
+        this.scene.start('mainMenu');
+    });
+
+    // Store pause menu elements
+    this.pauseMenuElements = { overlay, panel, title, resumeButton, menuButton };
+
+    // ESC to resume
+    this.input.keyboard.once('keydown-ESC', () => {
+        this.hidePauseMenu();
+    });
+}
+
+createPauseVolumeSlider(x, y, label, initialValue, onChange) {
+    // Label
+    this.add.text(x, y - 30, label, {
+        fontSize: '20px',
+        color: '#ffffff'
+    }).setScrollFactor(0).setDepth(1002);
+
+    // Slider track
+    const track = this.add.rectangle(x, y, 300, 8, 0x666666)
+        .setOrigin(0, 0.5)
+        .setScrollFactor(0)
+        .setDepth(1002);
+
+    // Slider handle
+    const handle = this.add.circle(x + (initialValue * 300), y, 12, 0xffffff)
+        .setInteractive()
+        .setScrollFactor(0)
+        .setDepth(1003);
+
+    // Volume value text
+    const valueText = this.add.text(x + 320, y, `${Math.round(initialValue * 100)}%`, {
+        fontSize: '16px',
+        color: '#ffffff'
+    }).setScrollFactor(0).setDepth(1002);
+
+    // Handle dragging
+    let isDragging = false;
+
+    handle.on('pointerdown', () => {
+        isDragging = true;
+    });
+
+    this.input.on('pointermove', (pointer) => {
+        if (isDragging) {
+            const newX = Phaser.Math.Clamp(pointer.x, x, x + 300);
+            handle.x = newX;
+            
+            const value = (newX - x) / 300;
+            valueText.setText(`${Math.round(value * 100)}%`);
+            onChange(value);
+        }
+    });
+
+    this.input.on('pointerup', () => {
+        isDragging = false;
+    });
+
+    // Store slider elements for cleanup
+    if (!this.pauseMenuSliders) {
+        this.pauseMenuSliders = [];
     }
+    this.pauseMenuSliders.push({ track, handle, valueText });
+}
+
+hidePauseMenu() {
+    if (!this.isPaused) return;
+
+    this.isPaused = false;
+    this.physics.resume();
+
+    // Destroy pause menu elements
+    if (this.pauseMenuElements) {
+        Object.values(this.pauseMenuElements).forEach(element => {
+            if (element) element.destroy();
+        });
+        this.pauseMenuElements = null;
+    }
+
+    // Destroy sliders
+    if (this.pauseMenuSliders) {
+        this.pauseMenuSliders.forEach(slider => {
+            Object.values(slider).forEach(element => {
+                if (element) element.destroy();
+            });
+        });
+        this.pauseMenuSliders = null;
+    }
+
+    // Re-enable ESC for pause
+    this.input.keyboard.once('keydown-ESC', () => {
+        if (!this.memoryActive && !this.isPaused) {
+            this.showPauseMenu();
+        }
+    });
+}
+
+transitionToLevel2() {
+console.log('Starting transition to Level2...');
+this.cameras.main.fadeOut(200, 0, 0, 0);
+this.cameras.main.once('camerafadeoutcomplete', () => {
+    console.log('Fade complete, starting Level2 scene');
+    this.scene.start('level2');
+});
+}
 }

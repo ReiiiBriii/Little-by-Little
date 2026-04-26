@@ -152,6 +152,7 @@ export default class Level2 extends Phaser.Scene {
             this.exitZone.setFillStyle(0x00ff00, 0.3);
         }
         
+                
         // Play game music only if not already playing
         if (!this.sound.get('gameMusic')) {
             this.gameMusic = this.sound.add('gameMusic');
