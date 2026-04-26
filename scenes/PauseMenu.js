@@ -205,14 +205,25 @@ export default class PauseMenu extends Phaser.Scene {
     resumeGame() {
         console.log('Resuming game, previousScene:', this.previousScene);
         if (this.previousScene) {
-            this.scene.wake(this.previousScene);
+            this.scene.resume(this.previousScene);
         }
         this.scene.stop();
     }
 
     backToMenu() {
-        // Stop all sounds and go to main menu
+        // Stop the game scene and all sounds
+        if (this.previousScene) {
+            this.scene.stop(this.previousScene);
+        }
         this.sound.stopAll();
+
+        // Reset all game progress so a fresh playthrough starts
+        this.registry.set('springCollected', false);
+        this.registry.set('dashUpgradeCollected', false);
+        this.registry.set('collectedMemories', null);
+        this.registry.set('comingFromLevel2', false);
+        this.registry.set('comingFromLevel3', false);
+
         this.scene.start('mainMenu');
     }
 }

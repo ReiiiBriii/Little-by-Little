@@ -16,30 +16,30 @@ export default class MainMenu extends Phaser.Scene {
         this.add.image(0, 0, 'bg')
             .setOrigin(0, 0)
             .setDisplaySize(this.scale.width, this.scale.height);
-        
+
         // Ensure audio context is resumed for browser compatibility
         if (this.sound.context && this.sound.context.state === 'suspended') {
             this.sound.context.resume();
         }
-        
+
         // Only create and play music if it's not already playing
         if (!this.sound.get('menuMusic')) {
             this.menuMusic = this.sound.add('menuMusic');
-            
+
             // Get saved music volume or use default
             const musicVolume = this.registry.get('musicVolume') || 0.5;
-            
+
             // Play menu music with seamless looping
-            this.menuMusic.play({ 
-                loop: true, 
+            this.menuMusic.play({
+                loop: true,
                 volume: musicVolume
             });
-            
+
             // Set up seamless loop by restarting immediately when near end
             this.menuMusic.on('complete', () => {
                 if (this.menuMusic && this.scene.isActive('mainMenu')) {
-                    this.menuMusic.play({ 
-                        loop: true, 
+                    this.menuMusic.play({
+                        loop: true,
                         volume: musicVolume
                     });
                 }
@@ -50,9 +50,9 @@ export default class MainMenu extends Phaser.Scene {
             const musicVolume = this.registry.get('musicVolume') || 0.5;
             this.menuMusic.setVolume(musicVolume);
         }
-        
+
         console.log('Menu music playing:', this.menuMusic);
-        
+
         // Center text properly using screen dimensions
         this.add.text(this.scale.width / 2, this.scale.height / 2 - 100, 'Little by Little', {
             fontSize: '48px',

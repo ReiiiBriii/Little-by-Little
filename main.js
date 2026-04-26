@@ -18,7 +18,7 @@ new Phaser.Game({
     input: {
         gamepad: true
     },
-    scene: [MainMenu, Options, PauseMenu, Level1, Level2, Level3, Credits],
+    scene: [MainMenu, Options, Level1, Level2, Level3, PauseMenu, Credits],
     physics: {
         default: 'arcade',
         arcade: {
