@@ -2,7 +2,6 @@ import * as Phaser from 'phaser';
 import Player from '../objects/Player.js';
 import GreasePath from '../objects/GreasePath.js';
 import MemoryModule from '../objects/MemoryModule.js';
-import Spring from '../objects/Spring.js';
 import memoryData from '../data/memoryData.js';
 
 export default class Level1 extends Phaser.Scene {
@@ -139,17 +138,6 @@ export default class Level1 extends Phaser.Scene {
         const memoryModuleX = 2500; // Fixed X position on map
         const memoryModuleY = 2000; // Fixed Y position on map
 
-        // Create spring collectible next to memory module only if not already collected
-        if (!springCollected) {
-            const springX = memoryModuleX + 200; // 200 pixels to the right of memory module
-            const springY = memoryModuleY; // Same Y position as memory module
-            console.log('Creating spring next to memory module at:', springX, springY);
-            const spring = new Spring(this, springX, springY);
-            spring.setupOverlap(this.player);
-            console.log('Spring created:', spring);
-        } else {
-            console.log('Spring already collected, not spawning spring');
-        }
 
         if (!this.collectedMemories.has('log1')) {
             console.log('Creating memory module at fixed position:', memoryModuleX, memoryModuleY);

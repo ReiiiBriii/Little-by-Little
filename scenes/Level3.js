@@ -3,26 +3,18 @@ import Player from '../objects/Player.js';
 import GreasePath from '../objects/GreasePath.js';
 import MemoryModule from '../objects/MemoryModule.js';
 import memoryData from '../data/memoryData.js';
-import Spring from '../objects/Spring.js';
 
-export default class Level2 extends Phaser.Scene {
+export default class Level3 extends Phaser.Scene {
     constructor() {
-        super('level2');
+        super('level3');
     }
 
     preload() {
         // Tilesets (as defined in tmj file)
-        this.load.image('Steel Beams', 'assets/tiles/Steel Beams.png');
-        this.load.image('HallwayGround', 'assets/tiles/Hallway tileset.png');
-        this.load.image('Hallway BG', 'assets/backgrounds/Hallway BG.png');
-        this.load.image('HallwayAssets', 'assets/backgrounds/HallwayAssets.png');
-        
-        // Additional backgrounds if needed
-        this.load.image('wallTiles', 'assets/backgrounds/LabWall.png');
-        this.load.image('assetTiles', 'assets/backgrounds/LabAssets.png');
+        this.load.image('Ground1', 'assets/tiles/Ground1.png');
         
         // Map
-        this.load.tilemapTiledJSON('map2', '/assets/maps/level2.tmj');
+        this.load.tilemapTiledJSON('map3', '/assets/maps/level3.tmj');
         
         // Sprites
         this.load.spritesheet('player', 'assets/sprites/Player.png', {
@@ -85,71 +77,26 @@ export default class Level2 extends Phaser.Scene {
         }
 
         // Map  
-        const map = this.make.tilemap({ key: 'map2' });
+        const map = this.make.tilemap({ key: 'map3' });
         
-        // Load tilesets with error handling
-        const groundTiles = map.addTilesetImage('HallwayGround', 'HallwayGround');
-        const steelBeams = map.addTilesetImage('Steel Beams', 'Steel Beams');
-        const hallwayBG = map.addTilesetImage('Hallway BG', 'Hallway BG');
-        
-        // Try loading HallwayAssets with explicit error handling
-        let hallwayAssets = null;
-        try {
-            hallwayAssets = map.addTilesetImage('HallwayAssets', 'HallwayAssets');
-            console.log('HallwayAssets loaded successfully');
-        } catch (error) {
-            console.error('Failed to load HallwayAssets tileset:', error);
-        }
+        // Load tilesets
+        const groundTiles = map.addTilesetImage('Ground1', 'Ground1');
         
         console.log('Tilesets loaded:', {
             groundTiles: !!groundTiles,
-            steelBeams: !!steelBeams,
-            hallwayBG: !!hallwayBG,
-            hallwayAssets: !!hallwayAssets,
             mapWidth: map.width,
             mapHeight: map.height
         });
         
-        // Debug: Check if HallwayAssets image is loaded correctly
-        if (hallwayAssets) {
-            console.log('HallwayAssets tileset details:', {
-                name: hallwayAssets.name,
-                image: hallwayAssets.image,
-                firstGid: hallwayAssets.firstgid,
-                tileCount: hallwayAssets.tilecount,
-                columns: hallwayAssets.columns,
-                rows: hallwayAssets.rows
-            });
-        }
-        
-        // Build tilesets array, excluding null ones
-        const allTilesets = [groundTiles, steelBeams, hallwayBG];
-        if (hallwayAssets) {
-            allTilesets.push(hallwayAssets);
-        }
-
-        // Visual test: Add HallwayAssets image directly to verify it loads
-        if (this.textures.exists('HallwayAssets')) {
-            const testImage = this.add.image(100, 100, 'HallwayAssets')
-                .setOrigin(0)
-                .setDepth(9999)
-                .setScale(0.1);
-            console.log('HallwayAssets image test created');
-        } else {
-            console.warn('HallwayAssets texture not found');
-        }
+        // Build tilesets array
+        const allTilesets = [groundTiles];
 
         // Create all layers as defined in tmj file
-        let backgroundLayer, backgroundLayer2, backgroundLayer3, layer1, layer2;
+        let layer1;
         
         try {
-            backgroundLayer = map.createLayer('Background', allTilesets, 0, 0);
-            backgroundLayer2 = map.createLayer('Background 2', allTilesets, 0, 0);
-            backgroundLayer3 = map.createLayer('Background 3', allTilesets, 0, 0);
             layer1 = map.createLayer('Tile Layer 1', allTilesets, 0, 0);
-            layer2 = map.createLayer('Tile Layer 2', allTilesets, 0, 0);
-            
-            console.log('All 5 layers created successfully');
+            console.log('Tile Layer 1 created successfully');
         } catch (error) {
             console.error('Error creating layers:', error);
         }
@@ -160,35 +107,6 @@ export default class Level2 extends Phaser.Scene {
             map.setCollisionByProperty({ collides: true }, true, true, layer1);
         }
         
-        if (layer2) {
-            map.setCollisionByProperty({ collides: true }, true, true, layer2);
-        }
-        
-        // Debug: Check tile counts and tile indices with tileset mapping
-        const debugTiles = (layer, name) => {
-            if (!layer) return;
-            const tiles = layer.filterTiles(tile => tile.index !== -1);
-            const uniqueIndices = [...new Set(tiles.map(tile => tile.index))];
-            
-            // Map tile indices to tilesets
-            const tilesetMapping = uniqueIndices.map(index => {
-                let tilesetName = 'Unknown';
-                if (index >= 1 && index <= 4) tilesetName = 'Steel Beams';
-                else if (index >= 5 && index <= 20) tilesetName = 'HallwayGround';
-                else if (index >= 21 && index <= 55) tilesetName = 'Hallway BG';
-                else if (index >= 56) tilesetName = 'HallwayAssets';
-                return `${index}(${tilesetName})`;
-            });
-            
-            console.log(`${name} - Total tiles: ${tiles.length}, Unique indices: ${tilesetMapping.slice(0, 15).join(', ')}${tilesetMapping.length > 15 ? '...' : ''}`);
-        };
-        
-        debugTiles(backgroundLayer, 'Background');
-        debugTiles(backgroundLayer2, 'Background 2');
-        debugTiles(backgroundLayer3, 'Background 3');
-        debugTiles(layer1, 'Tile Layer 1');
-        debugTiles(layer2, 'Tile Layer 2');
-        
         const mapWidth = map.width * map.tileWidth;
         const mapHeight = map.height * map.tileHeight;
 
@@ -196,42 +114,26 @@ export default class Level2 extends Phaser.Scene {
         
         // Object layer
         const objectLayer = map.getObjectLayer('Objects');
-        let spawnName = 'fromlevel1'; // default
+        const spawnPoint = objectLayer?.objects?.find(obj => obj.name === 'fromLevel2');
 
-        if (this.registry.get('comingFromLevel3')) {
-            spawnName = 'fromlevel3';
-        } else if (this.registry.get('comingFromLevel1')) {
-            spawnName = 'fromlevel1';
-        }
-
-        const spawnPoint = objectLayer?.objects?.find(obj => obj.name === spawnName);
         if (!spawnPoint) {
             console.error('Spawn point not found');
             return;
         }
 
         this.player = new Player(this, spawnPoint.x, spawnPoint.y);
+        
+        // Check if spring has been collected from Level1
         const springCollected = this.registry.get('springCollected') || false;
-
         if (springCollected) {
-            // Player already has jump ability
+            // Enable jumping for player if spring was collected in Level1
             this.player.hasCollectedMemory = true;
-            console.log('Spring already collected, jumping enabled');
-        } else {
-            // Spawn spring in Level2
-            const springX = 4000;
-            const springY = 3200;
-
-            const spring = new Spring(this, springX, springY);
-            spring.setupOverlap(this.player);
-
-            console.log('Spring created in Level2 at:', springX, springY);
+            console.log('Spring already collected in Level1, jumping enabled in Level3');
         }
         
-        // Add colliders for both layers AFTER player is created
+        // Add colliders for layer AFTER player is created
         this.physics.add.collider(this.player.sprite, layer1);
-        this.physics.add.collider(this.player.sprite, layer2);
-        console.log('Colliders added for both layers');
+        console.log('Colliders added for Tile Layer 1');
         
         this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
         this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
@@ -240,41 +142,30 @@ export default class Level2 extends Phaser.Scene {
         this.collectedMemories = this.registry.get('collectedMemories') || new Set();
         this.memoryActive = false;
 
-        // Level transition zones - handle multiple transitions
-        const transitionPoints = objectLayer?.objects?.filter(obj => obj.name === 'transition');
-        if (transitionPoints && transitionPoints.length > 0) {
-            transitionPoints.forEach((transitionPoint, index) => {
-                const targetLevel = transitionPoint.properties?.find(prop => prop.name === 'targetLevel')?.value;
-                console.log(`Level2 transition point ${index + 1} found:`, transitionPoint.x, transitionPoint.y, 'target:', targetLevel);
-                
-                // Make the zone smaller to avoid immediate re-triggering
-                const zone = this.add.rectangle(
-                    transitionPoint.x,
-                    transitionPoint.y,
-                    Math.max(transitionPoint.width || 32, 64),
-                    Math.max(transitionPoint.height || 32, 64)
-                ).setOrigin(0.5);
-                
-                this.physics.add.existing(zone, true);
-                this.physics.add.overlap(this.player.sprite, zone, () => {
-                    if (!this.transitionTriggered) {
-                        console.log(`Level2 transition to ${targetLevel} triggered!`);
-                        this.transitionTriggered = true;
-                        
-                        if (targetLevel === 'level1') {
-                            this.transitionToLevel1();
-                        } else if (targetLevel === 'level3') {
-                            this.transitionToLevel3();
-                        } else {
-                            console.warn('Unknown target level:', targetLevel);
-                            this.transitionTriggered = false; // Reset if target is unknown
-                        }
-                    }
-                });
-                
-                // Make the zone visible for debugging
-                zone.setFillStyle(0x00ff00, 0.3);
+        // Level transition zone back to Level2
+        const transitionPoint = objectLayer?.objects?.find(obj => obj.name === 'transition');
+        if (transitionPoint) {
+            console.log('Level3 transition point found:', transitionPoint.x, transitionPoint.y);
+            
+            // Make the zone smaller to avoid immediate re-triggering
+            this.exitZone = this.add.rectangle(
+                transitionPoint.x,
+                transitionPoint.y,
+                Math.max(transitionPoint.width || 32, 64),
+                Math.max(transitionPoint.height || 32, 64)
+            ).setOrigin(0.5);
+            
+            this.physics.add.existing(this.exitZone, true);
+            this.physics.add.overlap(this.player.sprite, this.exitZone, () => {
+                if (!this.transitionTriggered) {
+                    console.log('Level3 transition triggered!');
+                    this.transitionTriggered = true;
+                    this.transitionToLevel2();
+                }
             });
+            
+            // Make the zone visible for debugging
+            this.exitZone.setFillStyle(0x00ff00, 0.3);
         }
         
 
@@ -491,27 +382,15 @@ export default class Level2 extends Phaser.Scene {
         this.input.keyboard.once('keydown-SPACE', onSpace);
     }
 
-    transitionToLevel1() {
+    transitionToLevel2() {
         this.cameras.main.fadeOut(200, 0, 0, 0);
         this.cameras.main.once('camerafadeoutcomplete', () => {
             // Stop all audio before switching scenes
             if (this.gameMusic) this.gameMusic.stop();
             if (this.ambience) this.ambience.stop();
             this.sound.stopAll();
-            this.registry.set('comingFromLevel2', true);
-            this.scene.start('level1');
-        });
-    }
-
-    transitionToLevel3() {
-        this.cameras.main.fadeOut(200, 0, 0, 0);
-        this.cameras.main.once('camerafadeoutcomplete', () => {
-            // Stop all audio before switching scenes
-            if (this.gameMusic) this.gameMusic.stop();
-            if (this.ambience) this.ambience.stop();
-            this.sound.stopAll();
-            this.registry.set('comingFromLevel2', true);
-            this.scene.start('level3');
+            this.registry.set('comingFromLevel3', true);
+            this.scene.start('level2');
         });
     }
 }
